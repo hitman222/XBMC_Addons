@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon
+    id="script.pseudo.library"
+    version="0.0.8"
+    name="PseudoLibrary"
+    provider-name="Lunatixz">
+    <requires>
+        <import addon="script.common.plugin.cache" version="0.9.1"/>
+        <import addon="script.module.requests" version="1.1.0"/>
+        <import addon="script.module.simplejson" version="0.9.1"/>
+        <import addon="script.module.feedparser" version="0.9.1"/>
+        <import addon="script.module.metahandler" version="2.3.1" />
+        <import addon="script.module.addon.common" version="2.0.0"/>
+        <import addon="script.module.beautifulsoup" version="3.2.1"/>
+        <import addon="plugin.video.youtube" optional="true"/>
+    </requires>
+    <extension point="xbmc.python.script"
+        defaultresolution="1080p"
+        defaultresolutionwide="1080p"
+        library="default.py"/>
+    <extension point="xbmc.service" library="service.py" start="startup"/>
+    <extension point="xbmc.addon.metadata">
+        <platform>all</platform>
+        <minversion>35647</minversion>
+        <summary lang="en">Virtual Library Strm Generator</summary>
+        <description lang="en">Generate Strms from Youtube, plugins and upnp sources.</description>
+    </extension>
+</addon>

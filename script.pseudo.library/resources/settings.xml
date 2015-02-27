@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+    <category label="32000">
+        <setting label="32001" type="bool" id="Automatic_Update" default="false" />
+        <setting label="32002" type="enum" id="Automatic_Update_Time" subsetting="true" visible="eq(-1,true)" values="2|4|6|12|24|48|72" default="0"/>
+        <setting label="32006" type="enum" id="Automatic_Update_Delay" subsetting="true" visible="eq(-2,true)" values="0|5|10|15|20"  default="1"/>
+        <setting label="32005" type="bool" id="Automatic_Update_Run" subsetting="true" visible="eq(-3,true)" default="true"/>
+        <setting label="34008" type="bool" id="Automatic_Clear_Folder" subsetting="true" visible="eq(-4,true)" default="false"/>
+        <setting label="34009" type="bool" id="Automatic_Update_Folder" subsetting="true" visible="eq(-5,true)" default="false" />
+        <setting label="34010" type="bool" id="Automatic_Clean_Folder" subsetting="true" visible="eq(-6,true)" default="false" />
+        <setting label="32003" type="bool" id="Write_NFOS" default="false" />
+        <setting label="32007" type="bool" id="Youtube_Sort" default="false" />
+        <setting label="32004" type="folder" id="STRM_LOC" source="auto" default="" />   
+    </category>
+    <!--Community Network-->
+    <category label="30700"> 
+        <setting id="CN_Donor" label="30799" type="bool" visible="false" default="false" />   
+        <setting id="CN_Enable" type="enum" label="30701" values="Disabled|Community|NA" enable="eq(-1,false)" visible="eq(-1,false)" default="0" />
+        <setting id="CN_Enable" type="enum" label="30701" values="Disabled|Community|Donor" enable="eq(-2,true)" visible="eq(-2,true)" default="0" />
+        <setting id="CN_TV" label="30702" type="bool" subsetting="true" visible="!eq(-1,0)" default="false" />
+        <setting id="CN_Movies" label="30703" type="bool" subsetting="true" visible="!eq(-2,0)" default="false" />
+        <setting id="CN_Episodes" label="30704" type="bool" subsetting="true" visible="!eq(-3,0)" default="false" />
+        <setting id="CN_Sports" label="30705" type="bool" subsetting="true" visible="!eq(-4,0)" default="false" />
+        <setting id="CN_News" label="30707" type="bool" subsetting="true" visible="!eq(-5,0)" default="false" />
+        <setting id="CN_Kids" label="30706" type="bool" subsetting="true" visible="!eq(-6,0)" default="false" />
+        <setting id="CN_Music" label="30708" type="bool" subsetting="true" visible="!eq(-7,0)" default="false" />
+        <setting id="CN_Other" label="30709" type="bool" subsetting="true" visible="!eq(-8,0)" default="false" />
+    </category> 
+    <category label="34000">
+        <setting label="34001" type="text" id="Help" default=""/>
+        <setting label="34002" type="bool" id="Clear_Folder" default="false"/>
+    </category> 
+    <category label="39000">
+        <setting label="39001" type="bool" id="Donor_Enable" default="false"/>
+        <setting label="39002" type="text" id="Donor_UP" subsetting="true" visible="eq(-1,true)" default="User:Password"/>
+        <setting type="action" subsetting="true" label="39003" visible="eq(-2,true)" option="close" action="RunScript($CWD/service.py, -Donor_Enable)"/>
+    </category> 
+</settings>

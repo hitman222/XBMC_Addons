@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+  <strings>
+    <string id="32000">General</string>
+    <string id="32001">Automatic Update</string>
+    <string id="32002">Update Every (Hours)</string>
+    <string id="32006">Startup Delay (Seconds)</string>
+    <string id="32005">Run During Playback</string>
+    <string id="34008">Clear Strm folder each run</string>
+    <string id="34009">Run Library Scan when finished</string>
+    <string id="34010">Clean Database when finished</string>
+    <string id="32003">Create NFO's (ComingSoon)</string>
+    <string id="32007">Sort Youtube into is own folder</string>
+    <string id="32004">Strm Folder</string>
+    <string id="30700">Community List</string>
+    <string id="30701">Enable</string>
+    <string id="30702">Include TV Genre</string>
+    <string id="30703">Include Movies Genre</string>
+    <string id="30704">Include Episodes Genre</string>
+    <string id="30705">Include Sports Genre</string>
+    <string id="30706">Include Kids Genre</string>
+    <string id="30707">Include News Genre</string>
+    <string id="30708">Include Music Genre</string>
+    <string id="30709">Include Other Genre</string>
+    <string id="34000">Help</string>
+    <string id="34001">You can find help here</string>
+    <string id="34002">Clear Strm Folder</string>
+    <string id="39000">Donor</string>
+    <string id="39001">Enable Donor Features</string>
+    <string id="39002">Enter Username:Password</string>
+    <string id="39003">Activate Donor Features</string>
+  </strings>
+
+
