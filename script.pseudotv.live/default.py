@@ -48,6 +48,7 @@ except:
 
 def PseudoTV():
     import resources.lib.Overlay as Overlay
+    xbmcgui.Window(10000).setProperty("PseudoTVRunning", "True")
 
     try:
         MyOverlayWindow = Overlay.TVOverlay("script.pseudotv.live.TVOverlay.xml", __cwd__, Skin_Select)
@@ -74,9 +75,7 @@ def PseudoTV():
 
     
 # Adapting a solution from ronie (http://forum.xbmc.org/showthread.php?t=97353)
-if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True":
-    xbmcgui.Window(10000).setProperty("PseudoTVRunning", "True")
-    
+if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True":    
     try:
         PTVL_Version = REAL_SETTINGS.getSetting("PTVL_Version")
     except:
@@ -107,7 +106,10 @@ if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True":
         # Auto VideoWindow Patch.
         VideoWindow()
         
-        # Clear System Caches    
+        # Temp Force setting.
+        REAL_SETTINGS.setSetting('ClipLength', '7')
+        
+        # Clear filelist Caches    
         if REAL_SETTINGS.getSetting("ClearCache") == "true":
             log('ClearCache')  
             quarterly.delete("%") 
@@ -192,6 +194,8 @@ if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True":
             if getSize(settingsFile) > 100:
                 Backup(settingsFile, nsettingsFile)
 
+        REAL_SETTINGS.setSetting("ArtService_onInit","false")
+        REAL_SETTINGS.setSetting("ArtService_Running","false")
         #Start PseudoTV
         PseudoTV()
 else:

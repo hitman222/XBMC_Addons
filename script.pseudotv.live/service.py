@@ -30,10 +30,26 @@ ADDON_NAME = REAL_SETTINGS.getAddonInfo('name')
 ADDON_PATH = REAL_SETTINGS.getAddonInfo('path')
 ADDON_VERSION = REAL_SETTINGS.getAddonInfo('version')
 THUMB = (xbmc.translatePath(os.path.join(ADDON_PATH, 'resources', 'images')) + '/' + 'icon.png')
-xbmc.log("Service Started")
-REAL_SETTINGS.setSetting("ArtService_Running","false")
- 
- 
+
+
+# def SetOS():
+    # osWin = xbmc.getCondVisibility('system.platform.windows')
+    # osOsx = xbmc.getCondVisibility('system.platform.osx')
+    # osLinux = xbmc.getCondVisibility('system.platform.linux')
+    # osAndroid = xbmc.getCondVisibility('system.platform.android')
+
+    # if osWin:
+        # REAL_SETTINGS.setSetting("os","11")
+    # elif osOsx:
+        # REAL_SETTINGS.setSetting("os","8")
+    # elif osLinux:
+        # REAL_SETTINGS.setSetting("os","1")
+    # elif osLinux:
+        # REAL_SETTINGS.setSetting("os","1")
+    # else:
+        # REAL_SETTINGS.setSetting("os","1")
+
+        
 def HubSwap(): # Swap Org/Hub versions if 'Hub Installer' found.
     icon = ADDON_PATH + '/icon'
     HUB = xbmc.getCondVisibility('System.HasAddon(plugin.program.addoninstaller)') == 1
@@ -69,7 +85,7 @@ def donorCHK():
         REAL_SETTINGS.setSetting("COM_Donor", "true")
         REAL_SETTINGS.setSetting("TRL_Donor", "true")
         REAL_SETTINGS.setSetting("CAT_Donor", "true")
-        # REAL_SETTINGS.setSetting("autoFindCommunity_Source", "1")
+        # REAL_SETTINGS.setSetting("autoFindCommunity_Source", "1")  
     else:
         xbmc.log('script.pseudotv.live-Service: donorCHK = FreeUser')  
         REAL_SETTINGS.setSetting("AT_Donor", "false")
@@ -83,6 +99,7 @@ def service():
     xbmc.log('script.pseudotv.live-Service: Init')
     try:
         while (not xbmc.abortRequested):
+            xbmc.log("script.pseudotv.live-Service: Started")
             if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True":
                 xbmc.log('script.pseudotv.live-Service: Running')
                 donorCHK()
@@ -105,5 +122,5 @@ def autostart():
     IDLE_TIME = AUTOSTART_TIMER[int(REAL_SETTINGS.getSetting('timer_amount'))] 
     sleep(IDLE_TIME)
     xbmc.executebuiltin('RunScript("' + ADDON_PATH + '/default.py' + '")')
-   
+
 service()

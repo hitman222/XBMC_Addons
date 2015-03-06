@@ -20,7 +20,7 @@
 import os, re, sys, time, zipfile, threading, requests
 import urllib, urllib2, base64, fileinput, shutil, socket
 import xbmc, xbmcgui, xbmcplugin, xbmcvfs, xbmcaddon
-import urlparse, time, string, datetime, ftplib
+import urlparse, time, string, datetime, ftplib, hashlib
 
 from Globals import *  
 from FileAccess import FileAccess
@@ -35,7 +35,6 @@ try:
 except Exception,e:
     import storageserverdummy as StorageServer
       
-FreshInstall = False
 Error = False
 Path = xbmc.translatePath(os.path.join(ADDON_PATH, 'resources', 'skins', 'Default', '720p')) #Path to Default PTVL skin, location of mod file.
 fle = 'custom_script.pseudotv.live_9506.xml' #mod file, copy to xbmc skin folder
@@ -57,6 +56,39 @@ y = '</defaultcontrol>'
 z = '</defaultcontrol>\n    <visible>Window.IsActive(fullscreenvideo) + !Window.IsActive(script.pseudotv.TVOverlay.xml) + !Window.IsActive(script.pseudotv.live.TVOverlay.xml)</visible>'
 ###############################
 
+
+def hashfile(afile, hasher, blocksize=65536):
+    buf = afile.read(blocksize)
+    while len(buf) > 0:
+        hasher.update(buf)
+        buf = afile.read(blocksize)
+    return hasher.digest()
+    
+    
+def remove_duplicates(values):
+    output = []
+    seen = set()
+    for value in values:
+        # If value has not been encountered yet,
+        # ... add it to both list and set.
+        if value not in seen:
+            output.append(value)
+            seen.add(value)
+    return output
+
+    
+def EXTtype(arttype): 
+    log('EXTtype')
+    JPG = ['banner', 'fanart', 'folder', 'landscape', 'poster']
+    PNG = ['character', 'clearart', 'logo', 'disc']
+    
+    if arttype in JPG:
+        arttypeEXT = (arttype + '.jpg')
+    else:
+        arttypeEXT = (arttype + '.png')
+    log('EXTtype = ' + str(arttypeEXT))
+    return arttypeEXT
+        
 
 def anonFTPDownload(filename, DL_LOC):
     log('anonFTPDownload, ' + filename + ' - ' + DL_LOC)
@@ -256,10 +288,13 @@ def VersionCompare():
     if len(match) > 0:
         print vernum, str(match)[0]
         if vernum != str(match[0]):
+            xbmcgui.Window(10000).setProperty("PseudoTVOutdated", "True")
             dialog = xbmcgui.Dialog()
             confirm = xbmcgui.Dialog().yesno('[B]PseudoTV Live Update Available![/B]', "Your version is outdated." ,'The current available version is '+str(match[0]),'Would you like to install the PseudoTV Live repository to stay updated?',"Cancel","Install")
             if confirm:
-                UpdateFiles()       
+                UpdateFiles()     
+        else:
+            xbmcgui.Window(10000).setProperty("PseudoTVOutdated", "False")
     return
     
     
@@ -296,6 +331,7 @@ def UpdateFiles():
     
 def VideoWindow():
     log("VideoWindow, VWPath = " + str(VWPath))
+    FreshInstall = False
     #Copy VideoWindow Patch file
     try:
         if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True":
@@ -305,7 +341,10 @@ def VideoWindow():
                 xbmcvfs.copy(flePath, VWPath)
                 if xbmcvfs.exists(VWPath):
                     log('custom_script.pseudotv.live_9506.xml Copied')
-                    VideoWindowPatch()         
+                    VideoWindowPatch()   
+                    if FreshInstall == True:
+                        if dlg.yesno("PseudoTV Live", "Installed Videowindow patch, reboot required! Exit XBMC?"):
+                            xbmc.executebuiltin( "XBMC.AlarmClock(shutdowntimer,XBMC.Quit(),%d,true)" % ( 0.5, ) )
                 else:
                     raise
             else:
@@ -480,8 +519,36 @@ def Open_URL(url):
         return f
     except urllib2.URLError as e:
         pass
+    
+    
+def Read_URL(url):        
+    try:
+        f = urllib2.urlopen(url)
+        return f.readlines()
+    except urllib2.URLError as e:
+        pass
 
         
+def Force_URL(url):
+    Con = True
+    Count = 0
+    while Con:
+        if Count > 3:
+            Con = False
+        try:
+            req = urllib2.Request(url, headers={'User-Agent' : "Magic Browser"})
+            return urllib2.urlopen(req)
+            Con = False
+        except URLError, e:
+            print "Oops, timed out?"
+            Con = True
+        except socket.timeout:
+            print "Timed out!"
+            Con = True
+            pass 
+        Count += 1
+            
+            
 def Open_URL_UP(url, userpass):
     try:
         result = daily.cacheFunction(Open_URL_UP_NEW, url, userpass)
@@ -576,7 +643,7 @@ def allWithProgress(_in, _out, dp):
     return True
      
      
-def copyanything(self, src, dst):
+def copyanything(src, dst):
     try:
         shutil.copytree(src, dst)
     except OSError as exc:

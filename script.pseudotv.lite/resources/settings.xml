@@ -1,0 +1,94 @@
+<settings>
+<!--General-->
+    <category label="30000">
+        <setting label="300001" type="lsep"/>
+            <setting id="Config" type="action" label="30002" action="RunScript($CWD/config.py)"/>
+            <setting label="30003" type="lsep"/>
+                <setting id="Auto_Start" type="bool" label="30044" default="false"/>
+                <setting id="timer_amount" type="enum" values="0|5|10|15|20" label="30045" subsetting="true" visible="eq(-1,true)" default="1"/>
+                <setting id="AutoOff" type="enum" label="30004" values="Disable|30|60|90|120|150|180|210|240" default="0"/>
+                <setting id="AutoOff_Mode" type="enum" label="30009" values="Exit PTVL|Quit XBMC|Sleep|Shutdown" default="0"/>
+                <setting id="ForceChannelReset" type="bool" label="30005" default="false" />
+                <setting id="ChannelResetSetting" type="enum" label="30006" values="Automatic|Daily|Weekly|Monthly|Never|Every Time" default="0"/>
+                <setting id="StartMode" type="enum" label="30007" values="Resume|Real Time|Random" default="1" />
+                <setting id="ThreadMode" type="enum" label="30008" values="On|Minimum Use|Off" default="1" />
+                <setting id="notify" type="bool" label="30046" default="true"/>
+    </category>
+<!--Tweaks-->
+    <category label="30300">
+        <setting id="os" type="enum" values="Android Arm|Android x86|ATV1 Linux|ATV1 Stock|ATV2|IOS|Linux 32bit|Linux 64bit|Mac 32bit|Mac 64bit|Rasberry Pi|Windows|TLBB" label="30401" default="11" />
+        <setting id="limit_preferred_language" type="select" label="32055" values="Chinese|Dutch|English|Finnish|French|German|Hungarian|Italian|Japanese|Polish|Portuguese|Russian|Spanish|Swedish" default="English"/>
+        <setting id="ChannelDelay" type="enum" label="30302" default="0" values="None|0.25|0.5|0.75|1.0|1.25|1.5|1.75|2.0"/>
+        <setting id="SUPchannel" type="enum"  label="30303" values="Last Channel|Preferred Channel" default="0"/>
+        <setting id="CurrentChannel" type="text" label="30304" subsetting="true" visible="eq(-1,1)" default="1"/>
+        <setting id="HideClips" type="bool" label="30215" default="true"/>
+        <setting id="ClipLength" type="enum" subsetting="true" label="30216" visible="eq(-1,true)" values="15|30|60|90|120|180|240|300|360|420|460" default="7"/>
+    	<setting id="MEDIA_LIMIT" label="30310" type="enum" values="25|50|100|250|500|1000|Unlimited" default="0"/>
+        <setting id="reserveChannels" type="bool" label="30372" default="false"/>
+    </category>
+<!--Visual-->
+    <category label="30200">
+        <setting id="SkinSelector" type="enum"  label="30202" values="Default|PTVL|Custom" default="1"/>
+        <setting id="ArtService_Enabled" label="30201" visible="false" type="bool" default="false" /> 
+        <setting id="ShowSeEp" type="bool" label="30301" default="false"/>
+        <setting id="ChannelLogoFolder" type="folder" source="auto" label="30225" default=""/>
+        <!-- EPG -->
+        <setting label="30210" type="lsep"/>
+            <setting id="ClockMode" type="enum" label="30211" default="0" values="12 Hour|24 Hour"/>
+            <setting id="EPGcolor_enabled" label="30212" type="enum" values="Disabled|Genre|Chtype|Rating" default="0" />
+            <setting id="EPGcolor_MovieGenre" subsetting="true" type="bool" label="30213" default="false" visible="eq(-1,1)" />
+            <setting id="EPGTextEnable" type="enum" label="30214" values="Logo|Text" default="0"/>
+        <!-- Overlay -->
+        <setting label="30220" type="lsep"/>
+            <setting id="COLOR_CHANNUM" type="enum" label="30203" values="Holo|Cyan|Green|Gray|Light Gray|White" default="0"/>
+            <setting id="InfoOnChange" type="bool" label="30221" default="true"/>
+            <setting id="InfoTimer" subsetting="true" visible="eq(-1,true)" type="enum" label="30222" values="3|5|10|15|20|25" default="1"/>
+            <setting id="ShowChannelBug" type="bool" label="30224" default="true"/>
+            <setting id="EnableComingUp" type="enum" label="30226" values="Disabled|Overlay|PopUp|Classic" default="2"/>
+            <setting id="ComingUpArtwork" subsetting="true" visible="eq(-1,3)" type="enum" label="30227" values="Poster|Fanart|Landscape|Logo|Clearart" default="1" />
+   </category>
+<!--Autotune-->
+    <category label="30070">
+        <!-- Autotune Safety  -->
+      	<setting id="Autotune" type="bool" label="30071" default="false"/>
+      	<setting id="Warning1" type="bool" label="30072" subsetting="true" visible="eq(-1,true)" default="false"/>
+        <!-- Autotune Options -->
+            <setting id="autoFindCustom" type="bool" label="30077" subsetting="true" visible="eq(-1,true)" default="false"/>
+            <setting id="autoFindLivePVR" type="bool" label="30075" subsetting="true" visible="eq(-2,true)" default="false"/>
+            <setting id="autoFindNetworks" type="bool" label="30078" subsetting="true" visible="eq(-3,true)" default="false"/>
+            <setting id="autoFindStudios" type="bool" label="30079" subsetting="true" visible="eq(-4,true)" default="false"/>
+            <setting id="autoFindTVGenres" type="bool" label="30080" subsetting="true" visible="eq(-5,true)" default="false"/>
+            <setting id="autoFindMovieGenres" type="bool" label="30081" subsetting="true" visible="eq(-6,true)" default="false"/>
+            <setting id="autoFindMixGenres" type="bool" label="30082" subsetting="true" visible="eq(-7,true)" default="false"/>
+            <setting id="autoFindRecent" type="bool" label="30883" subsetting="true" visible="eq(-8,true)" default="false"/>
+        </category>    
+<!--Sharing-->
+    <category label="30100">
+        <setting label="30101" type="lsep"/>
+            <setting id="ChannelSharing" type="bool" label="30789" default="false" />
+            <setting id="HdhomerunMaster" subsetting="true" type="bool" label="30011" default="true" visible="eq(-1,true)" />
+            <setting id="SettingsFolder" subsetting="true" type="folder" source="auto" visible="eq(-2,true)" label="30010" default="" />
+        <setting label="30102" type="lsep"/>
+            <setting id="UPNP1" type="bool" label="30103" default="false" />
+            <setting id="UPNP1_IPP" subsetting="true" type="text"  label="30709" visible="eq(-1,true)" default="IP:9090" />
+            <setting id="UPNP1_UPW" subsetting="true" type="text" label="30902" visible="eq(-2,true)" default="xbmc:xbmc" />
+            <setting id="UPNP2" type="bool" label="30104" default="false" />
+            <setting id="UPNP2_IPP" subsetting="true" type="text"  label="30709" visible="eq(-1,true)" default="IP:9090" />
+            <setting id="UPNP2_UPW" subsetting="true" type="text" label="30902" visible="eq(-2,true)" default="xbmc:xbmc" />
+            <setting id="UPNP3" type="bool" label="30105" default="false" />
+            <setting id="UPNP3_IPP" subsetting="true" type="text"  label="30709" visible="eq(-1,true)" default="IP:9090" />
+            <setting id="UPNP3_UPW" subsetting="true" type="text" label="30902" visible="eq(-2,true)" default="xbmc:xbmc" />
+            <setting id="UPNP_OFFSET" subsetting="true" type="slider" label="30106" visible="eq(-9,true) | eq(-6,true) | eq(-3,true) " default="0" range="0,.10,5" option="float" />
+    </category>
+    <!--MISC-->
+    <category label="30900">  
+        <setting id="ATRestore" type="bool" label="30909" default="false"/>
+      	<setting id="Warning2" type="bool" label="30069" subsetting="true" visible="eq(-1,true)" default="false"/>
+        <setting label="30990" type="lsep"/>
+        <setting id="ActionTimeInt" type="slider" label="30309" range="10,5,60" option="int" default="15"/>
+        <setting id="enable_Debug" type="bool" label="30993" default="false"/>
+        <setting id="Override_ok" type="bool" label="30991" default="true"/>
+        <setting id="showNextItem" type="bool" label="39994" visible="false" default="true"/>
+        <setting id="ga_disable" type="bool" label="30992" default="false"/>
+    </category>
+</settings>

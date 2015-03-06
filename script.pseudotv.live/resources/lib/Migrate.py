@@ -34,7 +34,6 @@ try:
 except Exception,e:
     Donor_Downloaded = False
     xbmc.log("script.pseudotv.live-Migrate: Donor Import Failed, Disabling Donor Features" + str(e))
-    pass
     
 class Migrate:
 
@@ -501,7 +500,6 @@ class Migrate:
         if Globals.REAL_SETTINGS.getSetting("autoFindFilmonFavourites") == "true":
             self.log("autoTune, adding F.T.V Favourite Channels")
             self.updateDialog.update(self.updateDialogProgress,"AutoTuning","adding F.T.V Favourite Channels"," ")
-            addonini = 'https://dl.dropboxusercontent.com/s/s6c4kqhvel3f721/addon.ini'
             FTVnum = 0
             FTV = chanlist.plugin_ok('plugin.video.F.T.V')
             
@@ -510,7 +508,7 @@ class Migrate:
                     json_query = ('{"jsonrpc":"2.0","method":"Files.GetDirectory","params":{"directory":"plugin://plugin.video.F.T.V/?url=url&mode=415&name=Favourite+Channels&ch_fanart=","media":"video","properties":["thumbnail"]},"id":1}')
                     json_folder_detail = chanlist.sendJSON(json_query)
                     file_detail = re.compile( "{(.*?)}", re.DOTALL ).findall(json_folder_detail)
-                    FTVXML = (xbmc.translatePath(os.path.join(XMLTV_CACHE_LOC, 'ftvguide.xml')))
+                    PTVXML = (xbmc.translatePath(os.path.join(XMLTV_CACHE_LOC, 'ptvlguide.xml')))
 
                     for FTVnum in file_detail:   
                         files = re.search('"file" *: *"(.*?)"', FTVnum)
@@ -527,13 +525,13 @@ class Migrate:
                                 print thumbnail
                                 chanlist.GrabLogo(thumbnail, label + ' FTV')
                                 
-                            if xbmcvfs.exists(FTVXML):                                        
-                                CHSetName, CHzapit = chanlist.findZap2itID(label, FTVXML)
+                            if xbmcvfs.exists(PTVXML):                                        
+                                CHSetName, CHzapit = chanlist.findZap2itID(label, PTVXML)
                                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_type", "8")
                                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_time", "0")
                                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_1", CHzapit)
                                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_2", file)
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_3", "ftvguide")
+                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_3", "ptvlguide")
                                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rulecount", "2")
                                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rule_1_id", "1")
                                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rule_1_opt_1", label + ' FTV')  
@@ -1083,11 +1081,53 @@ class Migrate:
                 NameLst, Option1LST, Option2LST, Option3LST, Option4LST = chanlist.fillExternalList('UPNP','','',True)
             
             channelNum = self.tuneList(channelNum, '16', NameLst, Option1LST, Option2LST, Option3LST, Option4LST)
+                  
+        # Extras - IPTV
+        self.updateDialogProgress = 83
+        if Globals.REAL_SETTINGS.getSetting("autoFindIPTV_Source") != "0" and Donor_Downloaded == True:
+            self.log("autoTune, adding IPTV Channels")
+            self.updateDialog.update(self.updateDialogProgress,"adding IPTV Channels","This could take a few minutes","Please Wait...")
+
+            if Globals.REAL_SETTINGS.getSetting("autoFindIPTV_Source") == "1":
+                IPTVurl = Globals.REAL_SETTINGS.getSetting('autoFindIPTV_Path_Local')
+            else:
+                IPTVurl = Globals.REAL_SETTINGS.getSetting('autoFindIPTV_Path_Online')
+            
+            NameLst, PathLst = chanlist.IPTVtuning('IPTV',IPTVurl)
+            channelNum = self.tuneList(channelNum, '9', NameLst, '5400', PathLst, NameLst, 'IPTV M3U')
+
+        
+        # Extras - LiveStream
+        self.updateDialogProgress = 83
+        if Globals.REAL_SETTINGS.getSetting("autoFindLive_Source") != "0" and Donor_Downloaded == True:
+            self.log("autoTune, adding LiveStream Channels")
+            self.updateDialog.update(self.updateDialogProgress,"adding LiveStream Channels","This could take a few minutes","Please Wait...")
+
+            if Globals.REAL_SETTINGS.getSetting("autoFindLive_Source") == "1":
+                LSTVurl = Globals.REAL_SETTINGS.getSetting('autoFindLive_Path_Local')
+            else:
+                LSTVurl = Globals.REAL_SETTINGS.getSetting('autoFindLive_Path_Online')
+            
+            NameLst, PathLst = chanlist.IPTVtuning('LS',LSTVurl)
+            channelNum = self.tuneList(channelNum, '9', NameLst, '5400', PathLst, NameLst, 'LiveStream XML')
+
+        # Extras - Navi-X
+        self.updateDialogProgress = 83
+        if Globals.REAL_SETTINGS.getSetting("autoFindNavix_Source") != "0" and Donor_Downloaded == True:
+            self.log("autoTune, adding Navi-X Channels")
+            self.updateDialog.update(self.updateDialogProgress,"adding Navi-X Channels","This could take a few minutes","Please Wait...")
+            NaviXnum = 0
+                        
+            if Globals.REAL_SETTINGS.getSetting("autoFindNavix_Source") == "1":
+                NaviXurl = Globals.REAL_SETTINGS.getSetting('autoFindNavix_Path_Local')
+            else:
+                NaviXurl = Globals.REAL_SETTINGS.getSetting('autoFindNavix_Path_Online')
+            
+            NameLst, PathLst = chanlist.IPTVtuning('Navix',NaviXurl)
+            channelNum = self.tuneList(channelNum, '9', NameLst, '5400', PathLst, NameLst, 'Navi-x PLS')            
             
         Globals.ADDON_SETTINGS.writeSettings()
 
-        #set max channels
-        # chanlist.setMaxChannels()
         
         self.updateDialogProgress = 100
         # reset auto tune settings        
@@ -1140,7 +1180,7 @@ class Migrate:
         print channelNum, chtype, NameLst, Option1LST, Option2LST, Option3LST, Option4LST
         filecount = 0
         chanlist = ChannelList.ChannelList()
-                    
+            
         for i in range(len(NameLst)):
             found = True
             try:
@@ -1161,10 +1201,16 @@ class Migrate:
                 self.updateDialog.update(self.updateDialogProgress,"AutoTuning","",NameLst[i])
                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_type", str(chtype))
                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_time", "0")
-                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_1", str(Option1LST[i]).replace(',','|'))
-                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_2", str(Option2LST[i]))
-                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_3", str(Option3LST[i]))
-                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_4", str(Option4LST[i]))
+                if Option4LST == 'IPTV M3U' or Option4LST == 'LiveStream XML' or Option4LST == 'Navi-x PLS':
+                    Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_1", str(Option1LST))
+                    Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_2", str(Option2LST[i]))
+                    Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_3", str(Option3LST[i]))
+                    Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_4", str(Option4LST))
+                else:
+                    Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_1", str(Option1LST[i]).replace(',','|'))
+                    Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_2", str(Option2LST[i]))
+                    Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_3", str(Option3LST[i]))
+                    Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_4", str(Option4LST[i]))
                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rulecount", "1")
                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rule_1_id", "1")
                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rule_1_opt_1", title)

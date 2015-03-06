@@ -64,6 +64,7 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
             self.DirName = ''
             self.PluginSourcePathDir = ''
             self.LockBrowse = False
+            self.chnlst = ChannelList()
             if CHANNEL_SHARING:
                 realloc = REAL_SETTINGS.getSetting('SettingsFolder')
                 FileAccess.copy(realloc + '/settings2.xml', SETTINGS_LOC + '/settings2.xml')
@@ -84,6 +85,7 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
         self.log("onInit")
         REAL_SETTINGS.setSetting('Autotune', "false")
         REAL_SETTINGS.setSetting('Warning1', "false") 
+        self.KodiVideoSources()
         
         for i in range(NUMBER_CHANNEL_TYPES):
             try:
@@ -134,6 +136,61 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                     self.madeChanges = 1
 
 
+    def KodiVideoSources(self):
+        sourcepath = xbmc.translatePath(os.path.join('special://masterprofile/','sources.xml'))
+        self.log("KodiVideoSources, sources.xml = " + sourcepath)
+        PVR = False
+        UPNP = False
+        HDHR = False
+        Restart = False
+        a = '<video>'
+        b = '<video>\n'
+
+        if FileAccess.exists(sourcepath):
+            json_query = ('{"jsonrpc":"2.0","method":"Files.GetSources","params":{"media":"video"},"id":1}')
+            json_folder_detail = self.chnlst.sendJSON(json_query)
+            file_detail = re.compile( "{(.*?)}", re.DOTALL ).findall(json_folder_detail)
+            
+            for f in file_detail:
+                match = re.search('"file" *: *"(.*?)",', f)
+                if match:
+                    if match.group(1) == 'pvr://':
+                        PVR = True
+                    elif match.group(1) == 'upnp://':
+                        UPNP = True
+                    elif match.group(1) == 'hdhomerun://':
+                        HDHR = True         
+            self.log("KodiVideoSources, PVR = " + str(PVR) + " UPNP = " + str(UPNP) + " HDHR = " + str(HDHR))
+            
+            if PVR == False:
+                b = b + '<source>\n<name>PVR</name>\n<path pathversion="1">pvr://</path>\n<allowsharing>true</allowsharing>\n</source>\n'
+            if UPNP == False:
+                b = b + '<source>\n<name>UPnP Media Servers (Auto-Discover)</name>\n<path pathversion="1">upnp://</path>\n<allowsharing>true</allowsharing>\n</source>\n'
+            if HDHR == False:
+                b = b + '<source>\n<name>HDHomerun Devices</name>\n<path pathversion="1">hdhomerun://</path>\n<allowsharing>true</allowsharing>\n</source>\n'
+            
+            try:
+                f = open(sourcepath, "r")
+                linesLST = f.readlines()  
+                f.close()
+
+                for i in range(len(linesLST)):
+                    line = linesLST[i]
+                    if a in line:
+                        self.log("KodiVideoSources, a found replacing with b = " + b)
+                        replaceAll(sourcepath,a,b)  
+                        Restart = True      
+                        break
+            except:
+                self.log("KodiVideoSources, sources.xml missing")
+                # todo write missing sourcxml Restart = True
+                pass
+
+        if Restart:
+            if dlg.yesno("PseudoTV Live", "Updated Kodi video sources, reboot recommend! Exit XBMC?"):
+                xbmc.executebuiltin( "XBMC.AlarmClock(shutdowntimer,XBMC.Quit(),%d,true)" % ( 0.5, ) )      
+            
+            
     def saveSettings(self):
         self.log("saveSettings channel " + str(self.channel))
         chantype = 9999
@@ -190,36 +247,36 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
             ADDON_SETTINGS.setSetting(setting1, self.getControl(234).getLabel())
             ADDON_SETTINGS.setSetting(setting2, self.getControl(232).getLabel())
             ADDON_SETTINGS.setSetting(setting3, self.getControl(235).getLabel())
-            ADDON_SETTINGS.setSetting(setting4, self.getControl(236).getLabel())
+            ADDON_SETTINGS.setSetting(setting4, (self.getControl(236).getLabel()).replace('Default','1').replace('Random','2').replace('Reverse','3'))
         elif chantype == 11: #RSS
             ADDON_SETTINGS.setSetting(setting1, self.getControl(241).getLabel())
             ADDON_SETTINGS.setSetting(setting3, self.getControl(242).getLabel())
-            ADDON_SETTINGS.setSetting(setting4, self.getControl(243).getLabel())
+            ADDON_SETTINGS.setSetting(setting4, (self.getControl(243).getLabel()).replace('Default','1').replace('Random','2').replace('Reverse','3'))
         elif chantype == 12: #Music
             ADDON_SETTINGS.setSetting(setting1, self.getControl(250).getLabel())
             ADDON_SETTINGS.setSetting(setting2, self.getControl(251).getLabel())
             ADDON_SETTINGS.setSetting(setting3, self.getControl(252).getLabel())
-            ADDON_SETTINGS.setSetting(setting4, self.getControl(253).getLabel())
+            ADDON_SETTINGS.setSetting(setting4, (self.getControl(253).getLabel()).replace('Default','1').replace('Random','2').replace('Reverse','3'))
         elif chantype == 13: #Music Videos
             ADDON_SETTINGS.setSetting(setting1, self.getControl(260).getLabel())
             ADDON_SETTINGS.setSetting(setting2, self.getControl(261).getLabel())
             ADDON_SETTINGS.setSetting(setting3, self.getControl(262).getLabel())
-            ADDON_SETTINGS.setSetting(setting4, self.getControl(263).getLabel())
+            ADDON_SETTINGS.setSetting(setting4, (self.getControl(263).getLabel()).replace('Default','1').replace('Random','2').replace('Reverse','3'))
         elif chantype == 14: #Exclusive
             ADDON_SETTINGS.setSetting(setting1, self.getControl(270).getLabel())
             ADDON_SETTINGS.setSetting(setting2, self.getControl(271).getLabel())
             ADDON_SETTINGS.setSetting(setting3, self.getControl(272).getLabel())
-            ADDON_SETTINGS.setSetting(setting4, self.getControl(273).getLabel())
+            ADDON_SETTINGS.setSetting(setting4, (self.getControl(273).getLabel()).replace('Default','1').replace('Random','2').replace('Reverse','3'))
         elif chantype == 15: #Plugin
             ADDON_SETTINGS.setSetting(setting1, self.getControl(282).getLabel())
             ADDON_SETTINGS.setSetting(setting2, self.getControl(283).getLabel())
             ADDON_SETTINGS.setSetting(setting3, self.getControl(284).getLabel())
-            ADDON_SETTINGS.setSetting(setting4, self.getControl(285).getLabel())
+            ADDON_SETTINGS.setSetting(setting4, (self.getControl(285).getLabel()).replace('Default','1').replace('Random','2').replace('Reverse','3'))
         elif chantype == 16: #UPNP
             ADDON_SETTINGS.setSetting(setting1, self.getControl(292).getLabel())
             ADDON_SETTINGS.setSetting(setting2, self.getControl(293).getLabel())
             ADDON_SETTINGS.setSetting(setting3, self.getControl(294).getLabel())
-            ADDON_SETTINGS.setSetting(setting4, self.getControl(295).getLabel())
+            ADDON_SETTINGS.setSetting(setting4, (self.getControl(295).getLabel()).replace('Default','1').replace('Random','2').replace('Reverse','3'))
         elif chantype == 9999:
             ADDON_SETTINGS.setSetting(setting1, '')
             ADDON_SETTINGS.setSetting(setting2, '')
@@ -275,7 +332,6 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
 
     def onClick(self, controlId):
         self.log("onClick " + str(controlId))
-        chnlst = ChannelList()  
         dlg = xbmcgui.Dialog()
         YTFilter = ['User Subscription','User Favorites','Search Query','Raw gdata']  
         
@@ -367,22 +423,22 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
             self.getControl(202).setLabel(self.SortOrderList[select]) 
         #LiveTV
         elif controlId == 216:    # LiveTV Channel ID, select
-            if self.getControl(212).getLabel() != '':
-                setting3 = self.getControl(212).getLabel()
-                if setting3.startswith('http') or setting3 == 'pvr':
+            setting3 = self.getControl(212).getLabel()
+            if setting3 == '':
+                xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "Enter Channel & XMLTV Name", 4000, THUMB) )
+            else:
+                if setting3.startswith('http') or setting3 == 'pvr' or setting3 == 'scheduledirect' or setting3 == 'zap2it':
                     xmlTvFile = setting3
                 else:
                     xmlTvFile = os.path.join(XMLTV_LOC, str(setting3) +'.xml')
-                dnameID, CHid = chnlst.findZap2itID(self.getControl(213).getLabel(), xmlTvFile)
+                dnameID, CHid = self.chnlst.findZap2itID(self.getControl(213).getLabel(), xmlTvFile)
                 self.getControl(216).setLabel(CHid)
-            else:  
-                xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "Enter Channel & XMLTV Name", 4000, THUMB) )
-        
+
         elif controlId == 211:    # LiveTV Browse, select
             if self.LockBrowse:
                 xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "File Already Selected", 1000, THUMB) )     
                 return
-            elif len(self.getControl(211).getLabel()) > 1:
+            elif len(self.getControl(211).getLabel()) > 0:
                 title, retval = self.fillSources('LiveTV', self.getControl(214).getLabel(), self.getControl(217).getLabel())
             else:
                 try:
@@ -401,7 +457,7 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
             xmltvLst = []
             dirs,files = xbmcvfs.listdir(XMLTV_CACHE_LOC)
             dir,file = xbmcvfs.listdir(XMLTV_LOC)
-            xmltvcacheLst = [s.replace('.xml','') for s in files if s.endswith('.xml')] + ['pvr']
+            xmltvcacheLst = [s.replace('.xml','') for s in files if s.endswith('.xml')] + ['pvr','scheduledirect','zap2it']
             xmltvLst = sorted_nicely([s.replace('.xml','') for s in file if s.endswith('.xml')] + xmltvcacheLst)
             xbmc.executebuiltin( "Dialog.Close(busydialog)" )
             select = selectDialog(xmltvLst, 'Select xmltv file')
@@ -437,24 +493,26 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
             if self.LockBrowse:
                 xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "File Already Selected", 1000, THUMB) )     
                 return
-            elif len(self.getControl(221).getLabel()) > 1:
+            elif len(self.getControl(221).getLabel()) > 0:
                 title, retval = self.fillSources('InternetTV', self.getControl(224).getLabel(), self.getControl(227).getLabel())
             else:   
-                try:
-                    title, retval = self.fillSources('InternetTV', self.getControl(224).getLabel())                
-                except:
-                    xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "Select Source First", 1000, THUMB) )     
-
+                title, retval = self.fillSources('InternetTV', self.getControl(224).getLabel())               
+                
             self.getControl(221).setLabel(title)
             self.getControl(227).setLabel(retval)
+            self.getControl(226).setLabel('5400')
+            
             try:
                 title, genre = title.split(' - ')
             except:
                 pass
+                
             #Set Channel Name
+            self.getControl(222).setLabel(title)
+            self.getControl(223).setLabel(self.getControl(224).getLabel())
             ADDON_SETTINGS.setSetting("Channel_" + str(self.channel) + "_rulecount", "1")
             ADDON_SETTINGS.setSetting("Channel_" + str(self.channel) + "_rule_1_id", "1")
-            ADDON_SETTINGS.setSetting("Channel_" + str(self.channel) + "_rule_1_opt_1", title)
+            ADDON_SETTINGS.setSetting("Channel_" + str(self.channel) + "_rule_1_opt_1", title) 
         
         elif controlId == 222:    # InternetTV Title, input
             retval = dlg.input(self.getControl(222).getLabel(), type=xbmcgui.INPUT_ALPHANUM)
@@ -478,7 +536,6 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
         #Youtube
         elif controlId == 230:      # Youtube Type, left
             self.changeListData(self.YoutubeList, 232, -1)
-            # self.clearLabel()
             
             if (self.getControl(232).getLabel()).startswith('Multi'):
                 self.getControl(239).setVisible(True)
@@ -496,7 +553,6 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                 
         elif controlId == 231:      # Youtube Type, right
             self.changeListData(self.YoutubeList, 232, 1)  
-            # self.clearLabel()
             
             if (self.getControl(232).getLabel()).startswith('Multi'):
                 self.getControl(239).setVisible(True)
@@ -601,7 +657,7 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                 self.getControl(282).setLabel(Option1)
                 self.getControl(284).setLabel(Option3)
                 self.getControl(285).setLabel(Option4)
-                if len(Option2) > 1:
+                if len(Option2) > 0:
                     self.getControl(283).setLabel(Option2)
                 ADDON_SETTINGS.setSetting("Channel_" + str(self.channel) + "_rulecount", "1")
                 ADDON_SETTINGS.setSetting("Channel_" + str(self.channel) + "_rule_1_id", "1")
@@ -618,7 +674,7 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                 self.getControl(282).setLabel(Option1)
                 self.getControl(284).setLabel(Option3)
                 self.getControl(285).setLabel(Option4)
-                if len(Option2) > 1:
+                if len(Option2) > 0:
                     self.getControl(283).setLabel(Option2)
                 ADDON_SETTINGS.setSetting("Channel_" + str(self.channel) + "_rulecount", "1")
                 ADDON_SETTINGS.setSetting("Channel_" + str(self.channel) + "_rule_1_id", "1")
@@ -630,10 +686,10 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                 self.clearLabel(281)
         elif controlId == 281:      # Plugin browse, input
             xbmc.executebuiltin( "ActivateWindow(busydialog)" )
-            if len(self.getControl(281).getLabel()) > 1:
-                PluginDirNameLst, PluginDirPathLst = self.parsePlugin(chnlst.PluginInfo(self.PluginSourcePathDir), 'Dir')
+            if len(self.getControl(281).getLabel()) > 0:
+                PluginDirNameLst, PluginDirPathLst = self.parsePlugin(self.chnlst.PluginInfo(self.PluginSourcePathDir), 'Dir')
             else:
-                PluginDirNameLst, PluginDirPathLst = self.parsePlugin(chnlst.PluginInfo(self.PluginSourcePath), 'Dir')
+                PluginDirNameLst, PluginDirPathLst = self.parsePlugin(self.chnlst.PluginInfo(self.PluginSourcePath), 'Dir')
                 self.DirName = ''
                 self.PluginSourcePathDir = ''
                 
@@ -648,7 +704,7 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                 self.DirName = ''
                 self.PluginSourcePathDir = ''
             else:
-                self.DirName += '/' + (chnlst.CleanLabels(selectItem).replace('/','%2F')).replace('[D]','').replace('[F]','')
+                self.DirName += '/' + (self.chnlst.CleanLabels(selectItem).replace('/','%2F')).replace('[D]','').replace('[F]','')
                 PathName = PluginDirPathLst[select]
                 if self.DirName.startswith(' /'):
                     self.DirName = self.DirName[2:]
@@ -663,7 +719,7 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
             except:
                 Dir = selectItem
                 
-            Chname = chnlst.CleanLabels(((self.PluginSourcePath.split('//')[1]).split('/')[0]).replace('plugin.video.','').replace('plugin.audio.','') + ' ' + Dir).replace('[D]','')
+            Chname = self.chnlst.CleanLabels(((self.PluginSourcePath.split('//')[1]).split('/')[0]).replace('plugin.video.','').replace('plugin.audio.','') + ' ' + Dir).replace('[D]','')
             ADDON_SETTINGS.setSetting("Channel_" + str(self.channel) + "_rulecount", "1")
             ADDON_SETTINGS.setSetting("Channel_" + str(self.channel) + "_rule_1_id", "1")
             ADDON_SETTINGS.setSetting("Channel_" + str(self.channel) + "_rule_1_opt_1", Chname)
@@ -722,10 +778,10 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
 
         elif controlId == 291:      # UPNP browse, input
             xbmc.executebuiltin( "ActivateWindow(busydialog)" )
-            if len(self.getControl(291).getLabel()) > 1:
-                PluginDirNameLst, PluginDirPathLst = self.parsePlugin(chnlst.PluginInfo(self.PluginSourcePathDir), 'Dir')
+            if len(self.getControl(291).getLabel()) > 0:
+                PluginDirNameLst, PluginDirPathLst = self.parsePlugin(self.chnlst.PluginInfo(self.PluginSourcePathDir), 'Dir')
             else:
-                PluginDirNameLst, PluginDirPathLst = self.parsePlugin(chnlst.PluginInfo(self.PluginSourcePath), 'Dir')
+                PluginDirNameLst, PluginDirPathLst = self.parsePlugin(self.chnlst.PluginInfo(self.PluginSourcePath), 'Dir')
                 self.DirName = ''
                 self.PluginSourcePathDir = ''
             select = selectDialog(PluginDirNameLst, 'Select [COLOR=red][D][/COLOR]irectory')
@@ -739,7 +795,7 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                 self.DirName = ''
                 self.PluginSourcePathDir = ''
             else:
-                self.DirName += '/' + (chnlst.CleanLabels(selectItem)).replace('[D]','').replace('[F]','')
+                self.DirName += '/' + (self.chnlst.CleanLabels(selectItem)).replace('[D]','').replace('[F]','')
                 PathName = PluginDirPathLst[select]
                 if self.DirName.startswith(' /'):
                     self.DirName = self.DirName[2:]
@@ -754,7 +810,7 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
             except:
                 Dir = selectItem
                 
-            Chname = chnlst.CleanLabels(((self.PluginSourcePath.split('//')[1]).split('/')[0]) + ' ' + Dir).replace('[D]','')
+            Chname = self.chnlst.CleanLabels(((self.PluginSourcePath.split('//')[1]).split('/')[0]) + ' ' + Dir).replace('[D]','')
             ADDON_SETTINGS.setSetting("Channel_" + str(self.channel) + "_rulecount", "1")
             ADDON_SETTINGS.setSetting("Channel_" + str(self.channel) + "_rule_1_id", "1")
             ADDON_SETTINGS.setSetting("Channel_" + str(self.channel) + "_rule_1_opt_1", Chname)
@@ -903,7 +959,7 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
             chansetting1 = ADDON_SETTINGS.getSetting("Channel_" + str(channel) + "_1")
             chansetting2 = ADDON_SETTINGS.getSetting("Channel_" + str(channel) + "_2")
             chansetting3 = ADDON_SETTINGS.getSetting("Channel_" + str(channel) + "_3")
-            chansetting4 = ADDON_SETTINGS.getSetting("Channel_" + str(channel) + "_4")
+            chansetting4 = (ADDON_SETTINGS.getSetting("Channel_" + str(channel) + "_4")).replace('1','Default').replace('2','Random').replace('3','Reverse')
             channame = ADDON_SETTINGS.getSetting("Channel_" + str(channel) + "_rule_1_opt_1")
         except:
             self.log("Unable to get some setting")
@@ -1110,46 +1166,48 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
         self.getControl(106).setVisible(False)
         self.dlg = xbmcgui.DialogProgress()
         self.dlg.create("PseudoTV Live", "Preparing Configuration")
-        self.dlg.update(1)
-        chnlst = ChannelList()        
+        self.dlg.update(1)        
         self.dlg.update(50)
-        chnlst.fillMusicInfo()       
+        self.chnlst.fillMusicInfo()       
         self.dlg.update(60)
-        chnlst.fillTVInfo()
+        self.chnlst.fillTVInfo()
         self.dlg.update(70)
-        chnlst.fillMovieInfo()
+        self.chnlst.fillMovieInfo()
         self.dlg.update(80)
-        chnlst.fillPluginList()
+        self.chnlst.fillPluginList()
         self.dlg.update(90)
-        chnlst.fillFavourites()
+        self.chnlst.fillFavourites()
         self.dlg.update(95)
-        self.mixedGenreList = chnlst.makeMixedList(chnlst.showGenreList, chnlst.movieGenreList)
-        self.networkList = chnlst.networkList
-        self.studioList = chnlst.studioList
-        self.showGenreList = chnlst.showGenreList
-        self.movieGenreList = chnlst.movieGenreList
-        self.musicGenreList = chnlst.musicGenreList
-        self.FavouritesPathList = chnlst.FavouritesPathList
-        self.FavouritesNameList = chnlst.FavouritesNameList
+        self.mixedGenreList = self.chnlst.makeMixedList(self.chnlst.showGenreList, self.chnlst.movieGenreList)
+        self.networkList = self.chnlst.networkList
+        self.studioList = self.chnlst.studioList
+        self.showGenreList = self.chnlst.showGenreList
+        self.movieGenreList = self.chnlst.movieGenreList
+        self.musicGenreList = self.chnlst.musicGenreList
+        self.FavouritesPathList = self.chnlst.FavouritesPathList
+        self.FavouritesNameList = self.chnlst.FavouritesNameList
         self.YoutubeList = ['Channel','Playlist','User Subscription','User Favorites','Search Query','Multi Playlist','Multi Channel','Raw gdata','Seasonal']
         self.MediaLimitList = ['25','50','100','150','200','250','500','1000']
         self.SortOrderList = ['Default','Random','Reverse']
         self.SourceTypes = ['PVR','HDhomerun','Local Video','Local Music','Plugin','UPNP','Kodi Favourites','Super Favourites','URL','Community List']
         self.DonorSourceTypes = ['PVR','HDhomerun','Local Video','Local Music','Plugin','UPNP','Kodi Favourites','Super Favourites','URL','Community List','Donor List','IPTV M3U','LiveStream XML','Navi-X PLX']
+        self.ExternalPlaylistSources = ['[COLOR=blue][B]Community List[/B][/COLOR]','Local File','URL']
+        
+        
         
         if Donor_Downloaded:
-            self.pluginPathList = ['',''] + chnlst.pluginPathList
-            self.pluginNameList = ['[COLOR=blue][B]Community List[/B][/COLOR]','[COLOR=blue][B]Donor List[/B][/COLOR]'] + chnlst.pluginNameList
+            self.pluginPathList = ['',''] + self.chnlst.pluginPathList
+            self.pluginNameList = ['[COLOR=blue][B]Community List[/B][/COLOR]','[COLOR=blue][B]Donor List[/B][/COLOR]'] + self.chnlst.pluginNameList
             self.UPNPSourceList = ['[COLOR=blue][B]Community List[/B][/COLOR]','[COLOR=blue][B]Donor List[/B][/COLOR]','Local UPNP']
             self.SourceList = self.DonorSourceTypes
         else:
-            self.pluginPathList = [''] + chnlst.pluginPathList
-            self.pluginNameList = ['[COLOR=blue][B]Community List[/B][/COLOR]'] + chnlst.pluginNameList
+            self.pluginPathList = [''] + self.chnlst.pluginPathList
+            self.pluginNameList = ['[COLOR=blue][B]Community List[/B][/COLOR]'] + self.chnlst.pluginNameList
             self.UPNPSourceList = ['[COLOR=blue][B]Community List[/B][/COLOR]','Local UPNP']
             self.SourceList = self.SourceTypes
             
-        for i in range(len(chnlst.showList)):
-            self.showList.append(chnlst.showList[i][0])
+        for i in range(len(self.chnlst.showList)):
+            self.showList.append(self.chnlst.showList[i][0])
         
         self.showList =  sorted_nicely(self.showList)
         self.mixedGenreList.sort(key=lambda x: x.lower())
@@ -1175,7 +1233,6 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
             xbmc.executebuiltin( "ActivateWindow(busydialog)" )
             dirCount = 0
             fleCount = 0
-            chnlst = ChannelList()  
             PluginNameLst = []
             PluginPathLst = []
             PluginDirNameLst = []
@@ -1185,7 +1242,7 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                 Detail = (DetailLST[i]).split(',')
                 filetype = Detail[0]
                 title = Detail[1]
-                title = chnlst.CleanLabels(title)
+                title = self.chnlst.CleanLabels(title)
                 genre = Detail[2]
                 dur = Detail[3]
                 description = Detail[4]
@@ -1223,28 +1280,29 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
              
             
     def clearLabel(self, id=None):
-        if id:
-            
-            self.getControl(id).reset()
-            # self.getControl(id).setLabel(' ')
-            # self.getControl(id).setLabel('')
+        print 'clearLabel'
+        if id: 
+            try:
+                # self.getControl(id).reset()
+                self.getControl(id).setLabel('')  
+            except:
+                pass
         else:
             for i in range(NUMBER_CHANNEL_TYPES):
                 if i >= 7:
                     base = (120 + ((i + 1) * 10))
                     for n in range(10):
+                        id = base + n
                         try:
-                            self.getControl(base + n).reset()
-                            # self.getControl(base + n).setLabel(' ')
-                            # self.getControl(base + n).setLabel('')   
+                            # self.getControl(id).reset()
+                            self.getControl(id).setLabel('')  
                         except:
-                            break
+                            pass
                             
                             
     def fillSources(self, type, source, path=None):
         self.log("fillSources")
         dlg = xbmcgui.Dialog()
-        chnlst = ChannelList() 
         print source, type, path
         # Parse Source, return title, path
         try:
@@ -1270,20 +1328,20 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                 self.log("Plugin")
                 if path:
                     xbmc.executebuiltin( "ActivateWindow(busydialog)" )
-                    NameLst, PathLst = self.parsePlugin(chnlst.PluginInfo(path))
+                    NameLst, PathLst = self.parsePlugin(self.chnlst.PluginInfo(path))
                     xbmc.executebuiltin( "Dialog.Close(busydialog)" ) 
                     select = selectDialog(NameLst, 'Select [COLOR=green][F][/COLOR]ile')
                     if (NameLst[select]).startswith('[COLOR=green][F]'):
                         self.LockBrowse = True
-                    return chnlst.CleanLabels(NameLst[select]).replace('[D]','').replace('[F]',''), PathLst[select]
+                    return self.chnlst.CleanLabels(NameLst[select]).replace('[D]','').replace('[F]',''), PathLst[select]
                 else:
                     if Donor_Downloaded:
                         # Remove Donor List Reference
                         select = selectDialog(self.pluginNameList[2:], 'Select Plugin')
-                        return chnlst.CleanLabels((self.pluginNameList[2:])[select]), 'plugin://' + (self.pluginPathList[2:])[select]
+                        return self.chnlst.CleanLabels((self.pluginNameList[2:])[select]), 'plugin://' + (self.pluginPathList[2:])[select]
                     else:
                         select = selectDialog(self.pluginNameList[1:], 'Select Plugin')
-                        return chnlst.CleanLabels((self.pluginNameList[1:])[select]), 'plugin://' + (self.pluginPathList[1:])[select]
+                        return self.chnlst.CleanLabels((self.pluginNameList[1:])[select]), 'plugin://' + (self.pluginPathList[1:])[select]
                         
             elif source == 'UPNP':
                 self.log("UPNP")
@@ -1309,10 +1367,10 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                         path = unquote(path).replace('",return)','')
                         path = ((path.split('PlayMedia("')[1]).split('")')[0])
 
-                    NameLst, PathLst = self.parsePlugin(chnlst.PluginInfo(path))
+                    NameLst, PathLst = self.parsePlugin(self.chnlst.PluginInfo(path))
                     xbmc.executebuiltin( "Dialog.Close(busydialog)" )
                     select = selectDialog(NameLst, 'Select [COLOR=green][F][/COLOR]ile')
-                    name = chnlst.CleanLabels(NameLst[select])
+                    name = self.chnlst.CleanLabels(NameLst[select])
                     path = PathLst[select]
                     if name.startswith('[F]'):
                         #remove unwanted reference to superfavourites 
@@ -1326,10 +1384,10 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                         self.LockBrowse = True
                     return name.replace('[D]','').replace('[F]',''), path
                 else:
-                    NameLst, PathLst = self.parsePlugin(chnlst.PluginInfo('plugin://plugin.program.super.favourites'))
+                    NameLst, PathLst = self.parsePlugin(self.chnlst.PluginInfo('plugin://plugin.program.super.favourites'))
                     xbmc.executebuiltin( "Dialog.Close(busydialog)" )
                     select = selectDialog(NameLst, 'Select [COLOR=green][F][/COLOR]ile')
-                    return chnlst.CleanLabels(NameLst[select]).replace('[D]','').replace('[F]',''), PathLst[select]
+                    return self.chnlst.CleanLabels(NameLst[select]).replace('[D]','').replace('[F]',''), PathLst[select]
             elif source == 'URL':
                 self.log("URL")
                 input = dlg.input('Enter URL', type=xbmcgui.INPUT_ALPHANUM)
@@ -1339,7 +1397,7 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                 self.log("Community List")
                 if type == 'LiveTV':
                     self.log("Community List, LiveTV")
-                    NameLst, Option1LST, PathLst, Option3LST, Option4LST = chnlst.fillExternalList('LiveTV')
+                    NameLst, Option1LST, PathLst, Option3LST, Option4LST = self.chnlst.fillExternalList('LiveTV')
                     select = selectDialog(NameLst, 'Select LiveTV')
                     try:
                         source, title = NameLst[select].split(' - ')
@@ -1352,7 +1410,7 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                     return NameLst[select], PathLst[select]
                 elif type == 'InternetTV':
                     self.log("Community List, InternetTV")
-                    NameLst, Option1LST, PathLst, Option3LST, Option4LST = chnlst.fillExternalList('InternetTV')
+                    NameLst, Option1LST, PathLst, Option3LST, Option4LST = self.chnlst.fillExternalList('InternetTV')
                     select = selectDialog(NameLst, 'Select InternetTV')
                     self.getControl(226).setLabel(Option1LST[select])
                     self.getControl(222).setLabel(Option3LST[select])
@@ -1361,41 +1419,41 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                 elif type == 'YouTube':
                     self.log("Community List, YouTube")
                     if path == 'Channel':
-                        NameLst, Option1LST, Option2LST, Option3LST, Option4LST = chnlst.fillExternalList('YouTube', 'Channel')
+                        NameLst, Option1LST, Option2LST, Option3LST, Option4LST = self.chnlst.fillExternalList('YouTube', 'Channel')
                         select = selectDialog(NameLst, 'Select Channel')
                         return NameLst[select], Option1LST[select], Option2LST[select], Option3LST[select], (Option4LST[select]).replace('1','Default').replace('2','Random').replace('3','Reverse')
                     elif path == 'Playlist':
-                        NameLst, Option1LST, Option2LST, Option3LST, Option4LST = chnlst.fillExternalList('YouTube', 'Playlist')
+                        NameLst, Option1LST, Option2LST, Option3LST, Option4LST = self.chnlst.fillExternalList('YouTube', 'Playlist')
                         select = selectDialog(NameLst, 'Select Playlist')
                         return NameLst[select], Option1LST[select], Option2LST[select], Option3LST[select], (Option4LST[select]).replace('1','Default').replace('2','Random').replace('3','Reverse')
                     elif path == 'Multi Playlist':
-                        NameLst, Option1LST, Option2LST, Option3LST, Option4LST = chnlst.fillExternalList('YouTube', 'Multi Playlist')
+                        NameLst, Option1LST, Option2LST, Option3LST, Option4LST = self.chnlst.fillExternalList('YouTube', 'Multi Playlist')
                         select = selectDialog(NameLst, 'Select Network Playlist ')
                         return NameLst[select], (Option1LST[select]).replace(',','|'), Option2LST[select], Option3LST[select], (Option4LST[select]).replace('1','Default').replace('2','Random').replace('3','Reverse')
                     elif path == 'Multi Channel':   
-                        NameLst, Option1LST, Option2LST, Option3LST, Option4LST = chnlst.fillExternalList('YouTube', 'Multi Channel')
+                        NameLst, Option1LST, Option2LST, Option3LST, Option4LST = self.chnlst.fillExternalList('YouTube', 'Multi Channel')
                         select = selectDialog(NameLst, 'Select Network Channel')
                         return NameLst[select], (Option1LST[select]).replace(',','|'), Option2LST[select], Option3LST[select], (Option4LST[select]).replace('1','Default').replace('2','Random').replace('3','Reverse')          
                 elif type == 'RSS':
                     self.log("Community List, RSS")
-                    NameLst, Option1LST, Option2LST, Option3LST, Option4LST = chnlst.fillExternalList('RSS')
+                    NameLst, Option1LST, Option2LST, Option3LST, Option4LST = self.chnlst.fillExternalList('RSS')
                     select = selectDialog(NameLst, 'Select RSS Feed')
                     return NameLst[select], (Option1LST[select]).replace(',','|'), Option2LST[select], Option3LST[select], (Option4LST[select]).replace('1','Default').replace('2','Random').replace('3','Reverse') 
                 elif type == 'Plugin':
                     self.log("Community List, Plugin")
-                    NameLst, Option1LST, Option2LST, Option3LST, Option4LST = chnlst.fillExternalList('Plugin')
+                    NameLst, Option1LST, Option2LST, Option3LST, Option4LST = self.chnlst.fillExternalList('Plugin')
                     select = selectDialog(NameLst, 'Select Plugin')
-                    return chnlst.CleanLabels(NameLst[select]), Option1LST[select], Option2LST[select], Option3LST[select], (Option4LST[select]).replace('1','Default').replace('2','Random').replace('3','Reverse') 
+                    return self.chnlst.CleanLabels(NameLst[select]), Option1LST[select], Option2LST[select], Option3LST[select], (Option4LST[select]).replace('1','Default').replace('2','Random').replace('3','Reverse') 
                 elif type == 'Playon':
                     self.log("Community List, Playon")
-                    NameLst, Option1LST, Option2LST, Option3LST, Option4LST = chnlst.fillExternalList('Playon')
+                    NameLst, Option1LST, Option2LST, Option3LST, Option4LST = self.chnlst.fillExternalList('Playon')
                     select = selectDialog(NameLst, 'Select Playon')
                     return NameLst[select], Option1LST[select], Option2LST[select], Option3LST[select], (Option4LST[select]).replace('1','Default').replace('2','Random').replace('3','Reverse') 
             elif source == 'Donor List':
                 self.log("Donor List")
                 if type == 'LiveTV':
                     self.log("Donor List, LiveTV")
-                    NameLst, Option1LST, PathLst, Option3LST, Option4LST = chnlst.fillExternalList('LiveTV','','Donor')
+                    NameLst, Option1LST, PathLst, Option3LST, Option4LST = self.chnlst.fillExternalList('LiveTV','','Donor')
                     select = selectDialog(NameLst, 'Select LiveTV')
                     self.getControl(216).setLabel(Option1LST[select])
                     self.getControl(212).setLabel(Option3LST[select])
@@ -1403,7 +1461,7 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                     return NameLst[select], PathLst[select]
                 elif type == 'InternetTV':
                     self.log("Donor List, InternetTV")
-                    NameLst, Option1LST, PathLst, Option3LST, Option4LST = chnlst.fillExternalList('InternetTV','','Donor')
+                    NameLst, Option1LST, PathLst, Option3LST, Option4LST = self.chnlst.fillExternalList('InternetTV','','Donor')
                     select = selectDialog(NameLst, 'Select InternetTV')
                     self.getControl(226).setLabel(Option1LST[select])
                     self.getControl(222).setLabel(Option3LST[select])
@@ -1411,23 +1469,82 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
                     return NameLst[select], PathLst[select]
                 elif type == 'Plugin':
                     self.log("Donor List, Plugin")
-                    NameLst, Option1LST, Option2LST, Option3LST, Option4LST = chnlst.fillExternalList('Plugin','','Donor')
+                    NameLst, Option1LST, Option2LST, Option3LST, Option4LST = self.chnlst.fillExternalList('Plugin','','Donor')
                     select = selectDialog(NameLst, 'Select Plugin')
-                    return chnlst.CleanLabels(NameLst[select]), Option1LST[select], Option2LST[select], Option3LST[select], (Option4LST[select]).replace('1','Default').replace('2','Random').replace('3','Reverse') 
+                    return self.chnlst.CleanLabels(NameLst[select]), Option1LST[select], Option2LST[select], Option3LST[select], (Option4LST[select]).replace('1','Default').replace('2','Random').replace('3','Reverse') 
                 elif type == 'Playon':
                     self.log("Donor List, Playon")
-                    NameLst, Option1LST, Option2LST, Option3LST, Option4LST = chnlst.fillExternalList('Playon','','Donor')
+                    NameLst, Option1LST, Option2LST, Option3LST, Option4LST = self.chnlst.fillExternalList('Playon','','Donor')
                     select = selectDialog(NameLst, 'Select Playon')
                     return NameLst[select], Option1LST[select], Option2LST[select], Option3LST[select], (Option4LST[select]).replace('1','Default').replace('2','Random').replace('3','Reverse') 
             elif source == 'IPTV M3U':
                 self.log("IPTV M3U")
-                xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "Coming Soon", 4000, THUMB) )
+                select = selectDialog(self.ExternalPlaylistSources, 'Select IPTV M3U')
+                if self.chnlst.CleanLabels(self.ExternalPlaylistSources[select]) == 'Community List':
+                    self.log("IPTV M3U, Community List")
+                    NameLst, PathLst, Option2LST, Option3LST, Option4LST = self.chnlst.fillExternalList('ExternalPlaylist','IPTV')
+                    select = selectDialog(NameLst, 'Select IPTV Playlist')
+                    NameLst, PathLst = self.chnlst.IPTVtuning('IPTV',PathLst[select])
+                elif self.ExternalPlaylistSources[select] == 'Local File':
+                    self.log("IPTV M3U, Local File")
+                    retval = dlg.browse(1, "Select M3U", "video", ".m3u", False, False, "")
+                    NameLst, PathLst = self.chnlst.IPTVtuning('IPTV',retval)
+                elif self.ExternalPlaylistSources[select] == 'URL':
+                    self.log("IPTV M3U, URL")
+                    input, input = self.fillSources('','URL')
+                    NameLst, PathLst = self.chnlst.IPTVtuning('IPTV',input)  
+                    
+                if len(NameLst) > 0:
+                    select = selectDialog(NameLst, 'Select IPTV Feed')
+                    return NameLst[select], PathLst[select]  
+                else:
+                    xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "Invalid Selection", 1000, THUMB) )     
+                    
             elif source == 'LiveStream XML':
                 self.log("LiveStream XML")
-                xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "Coming Soon", 4000, THUMB) )
+                select = selectDialog(self.ExternalPlaylistSources, 'Select LiveStream XML')
+                if self.chnlst.CleanLabels(self.ExternalPlaylistSources[select]) == 'Community List':
+                    self.log("LiveStream XML, Community List")
+                    NameLst, PathLst, Option2LST, Option3LST, Option4LST = self.chnlst.fillExternalList('ExternalPlaylist','LS')
+                    select = selectDialog(NameLst, 'Select LiveStream Playlist')
+                    NameLst, PathLst = self.chnlst.IPTVtuning('LS',PathLst[select])
+                elif self.ExternalPlaylistSources[select] == 'Local File':
+                    self.log("LiveStream XML, Local File")
+                    retval = dlg.browse(1, "Select XML", "video", ".xml", False, False, "")
+                    NameLst, PathLst = self.chnlst.IPTVtuning('LS',retval)
+                elif self.ExternalPlaylistSources[select] == 'URL':
+                    self.log("LiveStream XML, URL")
+                    input, input = self.fillSources('','URL')
+                    NameLst, PathLst = self.chnlst.IPTVtuning('LS',input)  
+                    
+                if len(NameLst) > 0:
+                    select = selectDialog(NameLst, 'Select LiveStream Feed')
+                    return NameLst[select], PathLst[select]  
+                else:
+                    xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "Invalid Selection", 1000, THUMB) )  
+            
             elif source == 'Navi-X PLX':
                 self.log("Navi-X PLX")
-                xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "Coming Soon", 4000, THUMB) )
+                select = selectDialog(self.ExternalPlaylistSources, 'Select Navi-X PLX')
+                if self.chnlst.CleanLabels(self.ExternalPlaylistSources[select]) == 'Community List':
+                    self.log("Navi-X PLX, Community List")
+                    NameLst, PathLst, Option2LST, Option3LST, Option4LST = self.chnlst.fillExternalList('ExternalPlaylist','Navix')
+                    select = selectDialog(NameLst, 'Select Navi-X Playlist')
+                    NameLst, PathLst = self.chnlst.IPTVtuning('Navix',PathLst[select])
+                elif self.ExternalPlaylistSources[select] == 'Local File':
+                    self.log("Navi-X PLX, Local File")
+                    retval = dlg.browse(1, "Select PLX", "video", ".plx", False, False, "")
+                    NameLst, PathLst = self.chnlst.IPTVtuning('Navix',retval)
+                elif self.ExternalPlaylistSources[select] == 'URL':
+                    self.log("Navi-X PLX, URL")
+                    input, input = self.fillSources('','URL')
+                    NameLst, PathLst = self.chnlst.IPTVtuning('Navix',input)
+                    
+                if len(NameLst) > 0:
+                    select = selectDialog(NameLst, 'Select Navi-X Feed')
+                    return NameLst[select], PathLst[select]
+                else:
+                    xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "Invalid Selection", 1000, THUMB) )  
             else:
                 return  
         except:
@@ -1436,47 +1553,16 @@ class ConfigWindow(xbmcgui.WindowXMLDialog):
             
             
     def help(self):
-        self.log("help")
-        type = self.getControl(109).getLabel()
-        if type == "Custom Playlist":
-            text = 'Coming Soon'
-        elif type == "TV Network":
-            text = 'Coming Soon'
-        elif type == "Movie Studio":
-            text = 'Coming Soon'
-        elif type == "TV Genre":
-            text = 'Coming Soon'
-        elif type == "Movie Genre":
-            text = 'Coming Soon'
-        elif type == "Mixed Genre":
-            text = 'Coming Soon'
-        elif type == "TV Show":
-            text = 'Coming Soon'
-        elif type == "Directory":
-            text = 'Coming Soon'
-        elif type == "LiveTV":
-            text = 'Coming Soon'
-        elif type == "InternetTV":
-            text = 'Coming Soon'
-        elif type == "Youtube":
-            text = 'Coming Soon'
-        elif type == "RSS":
-            text = 'Coming Soon'
-        elif type == "Music (Coming Soon)":
-            text = 'Coming Soon'
-        elif type == "Music Videos (Coming Soon)":
-            text = 'Coming Soon'
-        elif type == "Exclusive (Coming Soon)":
-            text = 'Coming Soon'
-        elif type == "Plugin":
-            text = 'Coming Soon'
-        elif type == "UPNP (Coming Soon)":
-            text = 'Coming Soon'
-            
-        title = type + ' Channel Configuration Help'
+        BaseURL = 'https://pseudotv-live-community.googlecode.com/svn/'
+        type = self.getControl(109).getLabel()  
+        URL = BaseURL + "help_" + (type.lower()).replace(' ','%20')
+        self.log("help URL = " + URL)
+        title = type + ' Configuration Help'
+        f = Open_URL(URL)
+        text = f.read()
         showText(title, text)
-            
-            
+          
+          
     def updateListing(self, channel = -1):
         self.log("updateListing")
         start = 0

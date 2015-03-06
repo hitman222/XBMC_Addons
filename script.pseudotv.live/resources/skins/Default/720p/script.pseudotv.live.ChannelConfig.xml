@@ -255,7 +255,7 @@
                 <texturenofocus border="5">ptv_button-nofocus.png</texturenofocus>
                 <textcolor>gray</textcolor>
                 <focusedcolor>white</focusedcolor>
-                <onup>115</onup>
+                <onup>110</onup>
                 <ondown>112</ondown>
                 <colordiffuse></colordiffuse>
             </control>
@@ -995,7 +995,7 @@
                     <textoffsetx>7</textoffsetx>
                     <align>right</align>
                     <onup>213</onup>
-                    <ondown>114</ondown>
+                    <ondown>115</ondown>
                     <colordiffuse></colordiffuse>
                 </control>
                 <control type="label">
@@ -1161,7 +1161,7 @@
                     <textoffsetx>7</textoffsetx>
                     <align>right</align>
                     <onup>222</onup>
-                    <ondown>114</ondown>
+                    <ondown>115</ondown>
                     <colordiffuse></colordiffuse>
                 </control>
                 <control type="label">
@@ -1333,7 +1333,7 @@
                     <textoffsetx>7</textoffsetx>
                     <align>right</align>
                     <onup>235</onup>
-                    <ondown>114</ondown>
+                    <ondown>115</ondown>
                     <colordiffuse></colordiffuse>
                 </control>
                 <control type="label">
@@ -1445,7 +1445,7 @@
                     <textoffsetx>7</textoffsetx>
                     <align>right</align>
                     <onup>242</onup>
-                    <ondown>114</ondown>
+                    <ondown>115</ondown>
                     <colordiffuse></colordiffuse>
                 </control>
                 <control type="label">
@@ -1896,7 +1896,7 @@
                     <textoffsetx>7</textoffsetx>
                     <align>right</align>
                     <onup>284</onup>
-                    <ondown>114</ondown>
+                    <ondown>115</ondown>
                     <colordiffuse></colordiffuse>
                 </control>
                 <control type="label">
@@ -2057,7 +2057,7 @@
                     <textoffsetx>7</textoffsetx>
                     <align>right</align>
                     <onup>294</onup>
-                    <ondown>114</ondown>
+                    <ondown>115</ondown>
                     <colordiffuse></colordiffuse>
                 </control>
                 <control type="label">

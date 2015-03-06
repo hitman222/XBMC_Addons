@@ -1,3 +1,8 @@
+[*] NEW! Mute between channel change option under "Tweaks".
+[*] Any media for chtype >= 10 that is under 15mins will be "Stacked".
+[*] NEW! Universal xmltv file "ptvlguide", This xmltv file provides guidedata for PTVL compatible source (ie. Filmon,Pluto.tv,USTVnow, and more).
+[*] Three new skins Concast/Maverick/Z81. (Mavrick and Z81 originally skinned codemonkeyzero).
+[*] IPTV M3U/LiveStream XML/Navi-X PLX in-app channel configuration & Autotuning (Donor & Hub users only).
 [*] Autostart/Directory Channel/EPG Genre Fix
 [*] Donor lists (Plugins/InternetTV) updated.
 [*] Improved automatic settings2 backup and restore?

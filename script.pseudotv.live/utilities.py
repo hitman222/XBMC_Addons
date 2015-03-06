@@ -147,7 +147,7 @@ def LogoDownloader():
     log('LogoDownloader')
     LogoPath = xbmc.translatePath(os.path.join(SETTINGS_LOC))
     
-    if dlg.yesno("PseudoTV Live", "Download Color Logos or No, Download Mono Logos", ""):
+    if dlg.yesno("PseudoTV Live", "Download Color Logos or No, Download Mono Logos"):
         LogoDEST = LogoPath + '/PTVL_Color.zip'
         i = 0
     else:

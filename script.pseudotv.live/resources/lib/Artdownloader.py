@@ -123,10 +123,11 @@ class Artdownloader:
         try:
             if not FileAccess.exists(path):
                 FileAccess.makedirs(path)
-                
             org =  xbmc.translatePath(org)
             original = Image.open(org)                  
-            converted_img = original.convert('LA')
+            converted_img = original.convert('LA')  
+            img_bright = ImageEnhance.Brightness(converted_img)
+            converted_img = img_bright.enhance(2.0)
             converted_img.save(mod)
             return mod
         except Exception,e:
@@ -135,19 +136,18 @@ class Artdownloader:
         
         
     #Find ChannelBug, then Convert if enabled.
-    def FindBug(self, chtype, chname, mediapath):
-        self.log("FindBug")
+    def FindBug(self, chtype, chname):
+        self.logDebug("FindBug, chname = " + chname)
         setImage = ''
         BugName = (chname[0:18] + '.png')
         DefaultBug = os.path.join(IMAGES_LOC,'Default.png')
         BugFLE = xbmc.translatePath(os.path.join(LOGO_LOC,BugName))
         cachedthumb = xbmc.getCacheThumbName(BugFLE)
         cachefile = xbmc.translatePath(os.path.join(ART_LOC, cachedthumb[0], cachedthumb[:-4] + ".png")).replace("\\", "/")
-        
         if REAL_SETTINGS.getSetting('UNAlter_ChanBug') == 'true':
             if not FileAccess.exists(BugFLE):
                 BugFLE = DefaultBug
-                return BugFLE
+            return BugFLE
         else:
             if FileAccess.exists(cachefile):
                 return cachefile
@@ -159,7 +159,7 @@ class Artdownloader:
         
 
     def FindLogo(self, chtype, chname, mediapath):
-        self.log("FindLogo")
+        self.logDebug("FindLogo")
         found = False
         setImage = ''
         LogoName = (chname[0:18] + '.png')
@@ -226,15 +226,15 @@ class Artdownloader:
         if Cache_Enabled == True: 
             self.log("FindArtwork Cache") 
             try: #stagger artwork cache by chtype
-                if int(chtype) <= 3:
+                if chtype <= 3:
                     result = artwork1.cacheFunction(self.FindArtwork_NEW, type, chtype, chname, id, dbid, mpath, arttypeEXT)
-                elif int(chtype) > 3 and int(chtype) <= 6:
+                elif chtype > 3 and chtype <= 6:
                     result = artwork2.cacheFunction(self.FindArtwork_NEW, type, chtype, chname, id, dbid, mpath, arttypeEXT)
-                elif int(chtype) > 6 and int(chtype) <= 9:
+                elif chtype > 6 and chtype <= 9:
                     result = artwork3.cacheFunction(self.FindArtwork_NEW, type, chtype, chname, id, dbid, mpath, arttypeEXT)
-                elif int(chtype) > 9 and int(chtype) <= 12:
+                elif chtype > 9 and chtype <= 12:
                     result = artwork4.cacheFunction(self.FindArtwork_NEW, type, chtype, chname, id, dbid, mpath, arttypeEXT)
-                elif int(chtype) > 9 and int(chtype) <= 15:
+                elif chtype > 9 and chtype <= 15:
                     result = artwork5.cacheFunction(self.FindArtwork_NEW, type, chtype, chname, id, dbid, mpath, arttypeEXT)
                 else:
                     result = artwork6.cacheFunction(self.FindArtwork_NEW, type, chtype, chname, id, dbid, mpath, arttypeEXT)
@@ -251,7 +251,7 @@ class Artdownloader:
         
         
     def FindArtwork_NEW(self, type, chtype, chname, id, dbid, mpath, arttypeEXT):
-        self.log("FindArtwork_NEW, type = " + type + ' :chtype = ' + str(chtype) + ' :chname = ' + chname + ' :id = ' + str(id) + ' :dbid = ' + str(dbid) + ' :mpath = ' + mpath + ' :arttypeEXT = ' + arttypeEXT)
+        self.logDebug("FindArtwork_NEW, type = " + type + ', chtype = ' + str(chtype) + ', chname = ' + chname + ', id = ' + str(id) + ', dbid = ' + str(dbid) + ',arttypeEXT = ' + arttypeEXT)
         setImage = ''
         CacheArt = False
         DefaultArt = False
@@ -259,7 +259,7 @@ class Artdownloader:
         arttypeEXT_fallback = arttypeEXT.replace('landscape','fanart').replace('clearart','logo').replace('character','logo').replace('folder','poster')
         arttype_fallback = arttypeEXT_fallback.split(".")[0]
         
-        if int(chtype) <= 7:
+        if chtype <= 7:
             self.logDebug('FindArtwork_NEW, Infolder Artwork')
             smpath = mpath.rsplit('/',2)[0] #Path Above mpath ie Series folder
             artSeries = xbmc.translatePath(os.path.join(smpath, arttypeEXT))
@@ -278,7 +278,7 @@ class Artdownloader:
             else:
                 return self.dbidArt(type, chname, mpath, dbid, arttypeEXT)
         else:
-            if id == '0' or id == 0:
+            if id == '0':
                 if type == 'youtube':
                     self.logDebug('FindArtwork_NEW, Youtube')
                     return "http://img.youtube.com/vi/"+dbid+"/0.jpg"
@@ -321,7 +321,7 @@ class Artdownloader:
             
                 
     def SetDefaultArt(self, chname, mpath, arttypeEXT):
-        xbmc.log("SetDefaultArt Cache")
+        self.logDebug("SetDefaultArt Cache")
         if Cache_Enabled == True: 
             try:
                 result = artwork.cacheFunction(self.SetDefaultArt_NEW, chname, mpath, arttypeEXT)
@@ -336,7 +336,7 @@ class Artdownloader:
 
         
     def SetDefaultArt_NEW(self, chname, mpath, arttypeEXT):
-        self.log('SetDefaultArt_NEW')
+        self.logDebug('SetDefaultArt_NEW, chname = ' + chname + ', arttypeEXT = ' + arttypeEXT)
         setImage = ''
         arttype = arttypeEXT.split(".")[0]
         MediaImage = os.path.join(MEDIA_LOC, (arttype + '.png'))
