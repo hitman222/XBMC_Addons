@@ -53,9 +53,7 @@ def PseudoTV():
     try:
         MyOverlayWindow = Overlay.TVOverlay("script.pseudotv.live.TVOverlay.xml", __cwd__, Skin_Select)
     except Exception: 
-        buggalo.addExtraData("Skin_Select = ", str(Skin_Select))
-        buggalo.onExceptionRaised()
-        Error('PseudoTV Live','Error loading "' + Skin_Select + '" skin!','Verify selected skin in settings') 
+        Error('PseudoTV Live','Error loading "' + Skin_Select + '" skin!','Verify selected skin.') 
         return
         
     for curthread in threading.enumerate():
@@ -75,7 +73,7 @@ def PseudoTV():
 
     
 # Adapting a solution from ronie (http://forum.xbmc.org/showthread.php?t=97353)
-if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True":    
+if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True" and REAL_SETTINGS.getSetting("SyncXMLTV_Running") == "false":   
     try:
         PTVL_Version = REAL_SETTINGS.getSetting("PTVL_Version")
     except:
@@ -105,10 +103,7 @@ if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True":
 
         # Auto VideoWindow Patch.
         VideoWindow()
-        
-        # Temp Force setting.
-        REAL_SETTINGS.setSetting('ClipLength', '7')
-        
+                
         # Clear filelist Caches    
         if REAL_SETTINGS.getSetting("ClearCache") == "true":
             log('ClearCache')  
@@ -200,4 +195,4 @@ if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True":
         PseudoTV()
 else:
     log('script.pseudotv.live - Already running, exiting', xbmc.LOGERROR)
-    xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "Already running, Please Wait...", 1000, THUMB) )
+    xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "Already running please wait and try again...", 4000, THUMB) )

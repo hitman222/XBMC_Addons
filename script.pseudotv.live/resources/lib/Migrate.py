@@ -75,8 +75,6 @@ class Migrate:
         self.log("autoTune, autoFindLivePVR " + str(Globals.REAL_SETTINGS.getSetting("autoFindLivePVR")))
         self.log("autoTune, autoFindLiveHD " + str(Globals.REAL_SETTINGS.getSetting("autoFindLiveHD")))
         self.log("autoTune, autoFindUSTVNOW " + str(Globals.REAL_SETTINGS.getSetting("autoFindUSTVNOW")))
-        self.log("autoTune, autoFindSmoothStreams " + str(Globals.REAL_SETTINGS.getSetting("autoFindSmoothStreams")))
-        self.log("autoTune, autoFindFilmonFavourites " + str(Globals.REAL_SETTINGS.getSetting("autoFindFilmonFavourites")))
         self.log("autoTune, autoFindNetworks " + str(Globals.REAL_SETTINGS.getSetting("autoFindNetworks")))
         self.log("autoTune, autoFindTVGenres " + str(Globals.REAL_SETTINGS.getSetting("autoFindTVGenres")))
         self.log("autoTune, autoFindStudios " + str(Globals.REAL_SETTINGS.getSetting("autoFindStudios")))
@@ -426,14 +424,17 @@ class Migrate:
                                 thumbnail = thumbnails.group(1)
                                 chanlist.GrabLogo(thumbnail, CHname + ' USTV')
                                 
-                            if xbmcvfs.exists(USTVnowXML):  
-                                CHSetName, CHzapit = chanlist.findZap2itID(CHname, USTVnowXML)
+                            # if not FileAccess.exists(PTVLXML):
+                                # return
+                                
+                            if xbmcvfs.exists(PTVLXML):  
+                                CHSetName, CHzapit = chanlist.findZap2itID('USTVnow - ' + CHname, PTVLXML)
                                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_type", "8")
                                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_time", "0")
                                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_1", CHzapit)
                                 # Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_2", file) #Raw RTMP Link
                                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_2", "plugin://plugin.video.ustvnow/?name="+CHname+"&mode=play")
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_3", "ustvnow")
+                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_3", "ptvlguide")
                                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rulecount", "2")
                                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rule_1_id", "1")
                                 Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rule_1_opt_1", CHname + ' USTV')  
@@ -444,104 +445,7 @@ class Migrate:
                                 channelNum += 1
                 except:
                     pass
-                       
-        # LiveTV - smoothstreams
-        self.updateDialogProgress = 14
-        if Globals.REAL_SETTINGS.getSetting("autoFindSmoothStreams") == "true":
-            self.log("autoTune, adding SmoothStream Channels")
-            self.updateDialog.update(self.updateDialogProgress,"AutoTuning","adding SmoothStream Channels"," ")
-            SSTVnum = 0
-            SSTV = chanlist.plugin_ok('plugin.video.mystreamstv.beta')
-            
-            if SSTV == True:
-                try:
-                    json_query = uni('{"jsonrpc":"2.0","method":"Files.GetDirectory","params":{"directory":"plugin://plugin.video.mystreamstv.beta/?path=/root/channels","media":"video","properties":["thumbnail"]},"id":1}')
-                    json_folder_detail = chanlist.sendJSON(json_query)
-                    file_detail = re.compile( "{(.*?)}", re.DOTALL ).findall(json_folder_detail)
-                    SSTVXML = (xbmc.translatePath(os.path.join(XMLTV_CACHE_LOC, 'smoothstreams.xml')))
-                        
-                    for SSTVnum in file_detail:      
-                        files = re.search('"file" *: *"(.*?)"', SSTVnum)
-                        labels = re.search('"label" *: *"(.*?)"', SSTVnum)
-                        thumbnails = re.search('"thumbnail" *: *"(.*?)"', SSTVnum)
-                        
-                        if files and labels:
-                            file = files.group(1)
-                            label = labels.group(1)
-                            CHzapit = int(label.split(' - ')[0].replace('#',''))
-                            CHname = label.split(' - ')[1]
-                            CHnum = "%02d" % (CHzapit)
-                                    
-                            if thumbnails != None and len(thumbnails.group(1)) > 0:
-                                thumbnail = thumbnails.group(1)
-                                print thumbnail
-                                chanlist.GrabLogo(thumbnail, CHname + ' SS')
-                            
-                            if xbmcvfs.exists(SSTVXML):
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_type", "8")
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_time", "0")
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_1", str(CHzapit))
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_2", "plugin://plugin.video.mystreamstv.beta/?path=/root/channels/&action=play_channel&chan="+CHnum)
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_3", "smoothstreams")
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_4", CHname)
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rulecount", "2")
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rule_1_id", "1")
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rule_1_opt_1", CHname + ' SS')  
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rule_2_id", "13")
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rule_2_opt_1", "24")  
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_changed", "true")
-                                self.updateDialog.update(self.updateDialogProgress,"AutoTuning","adding SmoothStream Channels",CHname)
-                                channelNum += 1
-                except:
-                    pass
-           
-        # Plugin - F.T.V Favourites
-        self.updateDialogProgress = 90
-        if Globals.REAL_SETTINGS.getSetting("autoFindFilmonFavourites") == "true":
-            self.log("autoTune, adding F.T.V Favourite Channels")
-            self.updateDialog.update(self.updateDialogProgress,"AutoTuning","adding F.T.V Favourite Channels"," ")
-            FTVnum = 0
-            FTV = chanlist.plugin_ok('plugin.video.F.T.V')
-            
-            if FTV == True:
-                try:
-                    json_query = ('{"jsonrpc":"2.0","method":"Files.GetDirectory","params":{"directory":"plugin://plugin.video.F.T.V/?url=url&mode=415&name=Favourite+Channels&ch_fanart=","media":"video","properties":["thumbnail"]},"id":1}')
-                    json_folder_detail = chanlist.sendJSON(json_query)
-                    file_detail = re.compile( "{(.*?)}", re.DOTALL ).findall(json_folder_detail)
-                    PTVXML = (xbmc.translatePath(os.path.join(XMLTV_CACHE_LOC, 'ptvlguide.xml')))
 
-                    for FTVnum in file_detail:   
-                        files = re.search('"file" *: *"(.*?)"', FTVnum)
-                        labels = re.search('"label" *: *"(.*?)"', FTVnum)
-                        thumbnails = re.search('"thumbnail" *: *"(.*?)"', FTVnum)
-                        
-                        if files and labels:
-                            file = files.group(1)
-                            label = labels.group(1)
-                            inSet = False
-                                        
-                            if thumbnails != None and len(thumbnails.group(1)) > 0:
-                                thumbnail = thumbnails.group(1)
-                                print thumbnail
-                                chanlist.GrabLogo(thumbnail, label + ' FTV')
-                                
-                            if xbmcvfs.exists(PTVXML):                                        
-                                CHSetName, CHzapit = chanlist.findZap2itID(label, PTVXML)
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_type", "8")
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_time", "0")
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_1", CHzapit)
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_2", file)
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_3", "ptvlguide")
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rulecount", "2")
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rule_1_id", "1")
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rule_1_opt_1", label + ' FTV')  
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rule_2_id", "13")
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_rule_2_opt_1", "24")  
-                                Globals.ADDON_SETTINGS.setSetting("Channel_" + str(channelNum) + "_changed", "true")                                     
-                                self.updateDialog.update(self.updateDialogProgress,"AutoTuning","adding F.T.V Favourites",label)
-                                channelNum += 1                
-                except:
-                    pass    
                     
         #TV - Networks/Genres
         self.updateDialogProgress = 20
@@ -1138,8 +1042,6 @@ class Migrate:
         Globals.REAL_SETTINGS.setSetting('autoFindLivePVR', "false")
         Globals.REAL_SETTINGS.setSetting('autoFindLiveHD', "0")
         Globals.REAL_SETTINGS.setSetting('autoFindUSTVNOW', "false")  
-        Globals.REAL_SETTINGS.setSetting('autoFindSmoothStreams', "false")  
-        Globals.REAL_SETTINGS.setSetting("autoFindFilmonFavourites","false")
         Globals.REAL_SETTINGS.setSetting("autoFindNetworks","false")
         Globals.REAL_SETTINGS.setSetting("autoFindStudios","false")
         Globals.REAL_SETTINGS.setSetting("autoFindTVGenres","false")

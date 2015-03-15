@@ -22,8 +22,8 @@ import urllib, urllib2, base64, fileinput, shutil, socket
 import xbmc, xbmcgui, xbmcplugin, xbmcvfs, xbmcaddon
 import urlparse, time, string, datetime, ftplib, hashlib
 
-from Globals import *  
-from FileAccess import FileAccess
+from Globals import * 
+from FileAccess import *  
 from Queue import Queue
 from HTMLParser import HTMLParser
 
@@ -99,9 +99,9 @@ def anonFTPDownload(filename, DL_LOC):
         ftp.retrbinary('RETR %s' % filename, file.write)
         file.close()
         ftp.quit()
-    except:
+    except Exception, e:
+        print str(e)
         pass
-        
         
 def modification_date(filename):
     t = os.path.getmtime(filename)
@@ -125,7 +125,7 @@ def Backup(org, bak):
                 xbmcvfs.delete(bak)
             except:
                 pass
-        FileAccess.copy(org, bak)
+        xbmcvfs.copy(org, bak)
     
     if DEBUG == 'true':
         xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "Backup Complete", 1000, THUMB) )
@@ -139,7 +139,7 @@ def Restore(bak, org):
                 xbmcvfs.delete(org)
             except:
                 pass
-        FileAccess.rename(bak, org)
+        xbmcvfs.rename(bak, org)
     xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "Restore Complete, Restarting...", 1000, THUMB) )
 
 
@@ -335,11 +335,11 @@ def VideoWindow():
     #Copy VideoWindow Patch file
     try:
         if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True":
-            if not xbmcvfs.exists(VWPath):
+            if not FileAccess.exists(VWPath):
                 log("VideoWindow, VWPath not found")
                 FreshInstall = True
                 xbmcvfs.copy(flePath, VWPath)
-                if xbmcvfs.exists(VWPath):
+                if FileAccess.exists(VWPath):
                     log('custom_script.pseudotv.live_9506.xml Copied')
                     VideoWindowPatch()   
                     if FreshInstall == True:
@@ -378,11 +378,19 @@ def VideoWindowPatch():
         lineLST = f.readlines()            
         f.close()
         
+        Ypatch = True
         for i in range(len(lineLST)):
             line = lineLST[i]
-            if y in line:
-                replaceAll(DSPath,y,z)
-            log('dialogseekbar.xml Patched y,z')
+            if z in line:
+                Ypatch = False
+                break
+            
+        if Ypatch:
+            for i in range(len(lineLST)):
+                line = lineLST[i]
+                if y in line:
+                    replaceAll(DSPath,y,z)
+                log('dialogseekbar.xml Patched y,z')
     except Exception:
         VideoWindowUninstall()
         pass
@@ -422,7 +430,7 @@ def VideoWindowUninstall():
     log('VideoWindowUninstall')
     try:
         xbmcvfs.delete(VWPath)
-        if not xbmcvfs.exists(VWPath):
+        if not FileAccess.exists(VWPath):
             log('custom_script.pseudotv.live_9506.xml Removed')
     except Exception:
         Error = True
@@ -587,7 +595,7 @@ def Open_URL_Request(url):
 def Download_URL(_in, _out): 
     Finished = False    
     
-    if xbmcvfs.exists(_out):
+    if FileAccess.exists(_out):
         try:
             os.remove(_out)
         except:
@@ -624,9 +632,7 @@ def allNoProgress(_in, _out):
 
     
 def allWithProgress(_in, _out, dp):
-
     zin = zipfile.ZipFile(_in,  'r')
-
     nFiles = float(len(zin.infolist()))
     count  = 0
 
@@ -650,3 +656,59 @@ def copyanything(src, dst):
         if exc.errno == errno.ENOTDIR:
             shutil.copy(src, dst)
         else: raise
+           
+            
+def SyncXMLTV():
+    log('SyncXMLTV') 
+    if REAL_SETTINGS.getSetting("SyncXMLTV_Running") == "false":
+        REAL_SETTINGS.setSetting('SyncXMLTV_Running', "true")
+        
+        if FileAccess.exists(XMLTV_CACHE_LOC) == False:
+            try:
+                xbmcvfs.mkdir(XMLTV_CACHE_LOC)
+            except:
+                return
+        SyncPTVL()
+        REAL_SETTINGS.setSetting('SyncXMLTV_Running', "false")
+    return
+    
+                           
+def SyncPTVL(force=False):
+    log('SyncPTVL')
+    now  = datetime.datetime.today()  
+    
+    try:
+        SyncPTV_LastRun = REAL_SETTINGS.getSetting('SyncPTV_NextRun')
+        if not SyncPTV_LastRun or FileAccess.exists(PTVLXML) == False or force == True:
+            raise
+    except:
+        SyncPTV_LastRun = "1970-01-01 23:59:00.000000"
+        REAL_SETTINGS.setSetting("SyncPTV_NextRun",SyncPTV_LastRun)
+    
+    SyncPTV_LastRun = datetime.datetime.strptime(SyncPTV_LastRun, "%Y-%m-%d %H:%M:%S.%f")
+    log('SyncPTVL, Now = ' + str(now) + ', SyncPTV_LastRun = ' + str(SyncPTV_LastRun))
+    
+    if now > SyncPTV_LastRun:         
+        #Remove old file before download
+        if FileAccess.exists(PTVLXML):
+            try:
+                xbmcvfs.delete(PTVLXML)
+                log('SyncPTVL, Removed old PTVLXML')
+            except:
+                log('SyncPTVL, Removing old PTVLXML Failed!')
+
+        #Download new file from ftp, then http backup.
+        try:
+            anonFTPDownload('ptvlguide.xml', PTVLXML)
+            MSG = "XMLTV Update Complete"
+        except:
+            MSG = "XMLTV Update Failed!"
+            
+        if MSG:
+            log('SyncPTVL, ' + MSG)
+            xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live",MSG, 1000, THUMB) )      
+
+        SyncPTV_NextRun = ((now + datetime.timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S.%f"))
+        log('SyncPTVL, Now = ' + str(now) + ', SyncPTV_NextRun = ' + str(SyncPTV_NextRun))
+        REAL_SETTINGS.setSetting("SyncPTV_NextRun",str(SyncPTV_NextRun))     
+    return 

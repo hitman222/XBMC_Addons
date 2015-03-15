@@ -258,7 +258,8 @@ class EPGWindow(xbmcgui.WindowXMLDialog):
                     chname = (self.MyOverlayWindow.channels[curchannel - 1].name)
                     plpos = self.determinePlaylistPosAtTime(starttime, (curchannel - 1))
                     mediapath = ascii(self.MyOverlayWindow.channels[curchannel - 1].getItemFilename(plpos))
-                    setImage = self.Artdownloader.FindLogo(chtype, chname, mediapath)
+                    mpath = self.MyOverlayWindow.GetMpath(mediapath)
+                    setImage = self.Artdownloader.FindLogo(chtype, chname, mpath)
                     self.getControl(321 + i).setImage(setImage)
                 else:
                     self.getControl(321 + i).setImage('NA.png')
@@ -1024,17 +1025,8 @@ class EPGWindow(xbmcgui.WindowXMLDialog):
         self.PTVChanNum = newchan
         self.PVRtype = type
         self.PVRdbid = dbid
+        mpath = self.MyOverlayWindow.GetMpath(mediapath)
         
-        if mediapath[0:5] == 'stack':
-            smpath = (mediapath.split(' , ')[0]).replace('stack://','').replace('rar://','')
-            mpath = (os.path.split(smpath)[0]) + '/'
-        elif mediapath[0:6] == 'plugin':
-            mpath = 'plugin://' + mediapath.split('/')[2] + '/'
-        elif mediapath[0:4] == 'upnp':
-            mpath = 'upnp://' + mediapath.split('/')[2] + '/'
-        else:
-            mpath = (os.path.split(mediapath)[0]) + '/'
- 
         #Sickbeard/Couchpotato
         try:
             if Managed == 'True':

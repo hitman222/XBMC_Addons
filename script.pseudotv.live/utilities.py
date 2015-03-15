@@ -22,6 +22,7 @@ import os, sys, time, fileinput, re
 import urllib, urllib2
 
 from resources.lib.Globals import *
+from resources.lib.utils import *
 
 
 def showText(heading, text):
@@ -59,7 +60,6 @@ def showChangelog(addonID=None):
 
 #DonorDownload
 DonorURLPath = (PTVLURL + 'Donor.py')
-LinkURLPath = (PTVLURL + 'links.py')
 LinkPath = (os.path.join(ADDON_PATH, 'resources', 'lib', 'links.py'))
 DonorPath = (os.path.join(ADDON_PATH, 'resources', 'lib', 'Donor.pyo'))
 DL_DonorPath = (os.path.join(ADDON_PATH, 'resources', 'lib', 'Donor.py'))
@@ -144,42 +144,34 @@ def DonorDownloader():
            
             
 def LogoDownloader():
-    log('LogoDownloader')
-    LogoPath = xbmc.translatePath(os.path.join(SETTINGS_LOC))
-    
+    log('LogoDownloader')    
     if dlg.yesno("PseudoTV Live", "Download Color Logos or No, Download Mono Logos"):
-        LogoDEST = LogoPath + '/PTVL_Color.zip'
-        i = 0
+        LogoDEST = os.path.join(LOCK_LOC,'PTVL_Color.zip')
+        URLPath = PTVLURL + 'PTVL_Color.zip'
     else:
-        LogoDEST = LogoPath + '/PTVL_Mono.zip'
-        i = 1
+        LogoDEST = os.path.join(LOCK_LOC,'PTVL_Mono.zip')
+        URLPath = PTVLURL + 'PTVL_Mono.zip'
 
-    if not DEFAULT_LOGO_LOC:
-        xbmcvfs.mkdirs(DEFAULT_LOGO_LOC)
-        
+    if not xbmcvfs.exists(LOCK_LOC):
+        log('Creating LogoPath')  
+        xbmcvfs.mkdir(LOCK_LOC)
+
     try:
-        xbmcvfs.delete(xbmc.translatePath(LinkPath))
-        log('Removed LinkPath')  
+        xbmcvfs.delete(xbmc.translatePath(LogoDEST))
+        log('Removed old LogoDEST')  
     except Exception:
         pass
          
     try:
-        urllib.urlretrieve(LinkURLPath, (xbmc.translatePath(LinkPath)))
-        f = open((xbmc.translatePath(LinkPath)), "r")
-        linesLST = f.readlines()
-        LogoURLPath = linesLST[i] 
-        download(LogoURLPath, LogoDEST)
-        all(LogoDEST, LogoPath)
-        REAL_SETTINGS.setSetting("ChannelLogoFolder", DEFAULT_LOGO_LOC)
+        download(URLPath, LogoDEST)
+        all(LogoDEST, LOCK_LOC)
+        REAL_SETTINGS.setSetting("ChannelLogoFolder", LOCK_LOC + 'logos')
         
         try:
-            xbmcvfs.delete(xbmc.translatePath(LinkPath))
-            log('Removed LinkPath')  
             xbmcvfs.delete(LogoDEST)
             log('Removed LogoDEST')  
         except Exception:
-            pass
-            
+            pass   
     except Exception:
         pass
        

@@ -64,6 +64,8 @@ try:
     xbmcvfs.delete(xbmc.translatePath(DL_DonorPath))      
 except Exception,e:  
     Donor_Downloaded = False
+    DL_DonorPath = (os.path.join(ADDON_PATH, 'resources', 'lib', 'Donor.py'))
+    xbmcvfs.delete(xbmc.translatePath(DL_DonorPath))   
     xbmc.log("script.pseudotv.live-ChannelList: Donor Import Failed, Disabling Donor Features" + str(e))      
    
 try:
@@ -155,30 +157,37 @@ class ChannelList:
             self.lastExitTime = int(time.time())
             
             
-    def setupList(self):
+    def setupList(self, silent=False):
         self.log("setupList")
         self.readConfig()
-        self.updateDialog.create("PseudoTV Live", "Updating channel list")
-        self.updateDialog.update(0, "Updating channel list")
-        self.updateDialogProgress = 0
+        if not silent:
+            self.updateDialog.create("PseudoTV Live", "Updating channel list")
+            self.updateDialog.update(0, "Updating channel list")
+            self.updateDialogProgress = 0
         foundvalid = False
         makenewlists = False
-        self.background = False
+        
+        if not silent:
+            self.background = False
+        else:
+            self.background = True
         
         if self.backgroundUpdating > 0 and self.myOverlay.isMaster == True:
             makenewlists = True
             
         # Go through all channels, create their arrays, and setup the new playlist
         for i in range(self.maxChannels):
-            self.updateDialogProgress = i * 100 // self.enteredChannelCount
-            self.updateDialog.update(self.updateDialogProgress, "Loading channel " + str(i + 1), "waiting for file lock", "")
+            if not silent:
+                self.updateDialogProgress = i * 100 // self.enteredChannelCount
+                self.updateDialog.update(self.updateDialogProgress, "Loading channel " + str(i + 1), "waiting for file lock", "")
             self.channels.append(Channel())
             
-            # If the user pressed cancel, stop everything and exit
-            if self.updateDialog.iscanceled():
-                self.log('Update channels cancelled')
-                self.updateDialog.close()
-                return None
+            if not silent:
+                # If the user pressed cancel, stop everything and exit
+                if self.updateDialog.iscanceled():
+                    self.log('Update channels cancelled')
+                    self.updateDialog.close()
+                    return None
                 
             self.setupChannel(i + 1, self.background, makenewlists, False)
             
@@ -190,16 +199,18 @@ class ChannelList:
 
         if foundvalid == False and makenewlists == False:
             for i in range(self.maxChannels):
-                self.updateDialogProgress = i * 100 // self.enteredChannelCount
-                self.updateDialog.update(self.updateDialogProgress, "Updating channel " + str(i + 1), "waiting for file lock", '')
+                if not silent:
+                    self.updateDialogProgress = i * 100 // self.enteredChannelCount
+                    self.updateDialog.update(self.updateDialogProgress, "Updating channel " + str(i + 1), "waiting for file lock", '')
                 self.setupChannel(i + 1, self.background, True, False)
 
                 if self.channels[i].isValid:
                     foundvalid = True
                     break
-
-        self.updateDialog.update(100, "Update complete")
-        self.updateDialog.close()
+        
+        if not silent:
+            self.updateDialog.update(100, "Update complete")
+            self.updateDialog.close()
         return self.channels 
 
         
@@ -570,7 +581,7 @@ class ChannelList:
             #Set MediaLimit
             if chtype == 7 and self.limit == 0:
                 limit = 1000
-            elif chtype == 8:
+            elif chtype == 8 and chtype == 9:
                 limit = 72
             elif chtype >= 10:
                 if self.limit == 0 or self.limit > 200:
@@ -617,7 +628,7 @@ class ChannelList:
             # Validate Feed #
             fileListCHK = self.Valid_ok(setting2)
             if fileListCHK == True:
-                fileList = self.buildInternetTVFileList(setting1, setting2, setting3, setting4)
+                fileList = self.buildInternetTVFileList(setting1, setting2, setting3, setting4, limit)
             else:
                 self.log('makeChannelList, CHANNEL: ' + str(channel) + ', CHTYPE: ' + str(chtype), 'fileListCHK invalid: ' + str(setting2))
                 return 
@@ -1916,6 +1927,21 @@ class ChannelList:
         local_dt = datetime.datetime.fromtimestamp(timestamp)
         assert tmpDate.resolution >= timedelta(microseconds=1)
         return local_dt.replace(microsecond=tmpDate.microsecond) 
+   
+   
+    def parseUTCXMLTVDate(self, dateString):
+        if dateString is not None:
+            if dateString.find(' ') != -1:
+                # remove timezone information
+                dateString = dateString[:dateString.find(' ')]
+            t = time.strptime(dateString, '%Y%m%d%H%M%S')
+            tmpDate = datetime.datetime(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)
+            timestamp = calendar.timegm(tmpDate.timetuple())
+            local_dt = datetime.datetime.fromtimestamp(timestamp)
+            assert tmpDate.resolution >= timedelta(microseconds=1)
+            return local_dt.replace(microsecond=tmpDate.microsecond) 
+        else:
+            return None
        
        
     def parseXMLTVDate(self, dateString, offset=0):
@@ -1956,11 +1982,6 @@ class ChannelList:
             if setting3 == 'pvr':
                 showList = self.fillLiveTVPVR(setting1, setting2, setting3, setting4, chname, limit)
                 MSG = 'Listing Unavailable, Check your pvr backend'
-            elif setting3 == 'smoothstreams':
-                fileList = self.fillLiveTV(setting1, setting2, setting3, setting4, chname, limit)
-                # Fill Gap Between Listings #
-                showList = self.fillEmptyLiveTV(fileList, setting1, setting2, setting3, setting4)  
-                MSG = 'Listing Unavailable, Check your '+setting3+' xmltv file'   
             else:   
                 showList = self.fillLiveTV(setting1, setting2, setting3, setting4, chname, limit)
                 MSG = 'Listing Unavailable, Check your '+setting3+' xmltv file'
@@ -2000,14 +2021,12 @@ class ChannelList:
                 f = Open_URL(setting3)
             else:
                 f = FileAccess.open(self.xmlTvFile, "r")
-
+                
             if setting3.lower() in UTC_XMLTV:            
                 #our difference from GMT in hours, minus 4 hours for the initial offset of the tv guide data                
                 offset = ((time.timezone / 3600) - 5 ) * -1     
             else:
                 offset = 0
-                
-            self.log("fillLiveTV, offset = " + str(offset))   
                 
             if self.background == False:
                 self.updateDialog.update(self.updateDialogProgress, "Updating channel " + str(self.settingChannel), "adding LiveTV", 'parsing ' + chname)
@@ -2100,8 +2119,12 @@ class ChannelList:
                             else:
                                 ignoreParse = False
                                 
-                            stopDate = self.parseXMLTVDate(elem.get('stop'), offset)
-                            startDate = self.parseXMLTVDate(elem.get('start'), offset)
+                            if setting3.lower() == 'ptvlguide':
+                                stopDate = self.parseUTCXMLTVDate(elem.get('stop'))
+                                startDate = self.parseUTCXMLTVDate(elem.get('start'))
+                            else:
+                                stopDate = self.parseXMLTVDate(elem.get('stop'), offset)
+                                startDate = self.parseXMLTVDate(elem.get('start'), offset)
                             
                             #Enable Enhanced Parsing
                             if REAL_SETTINGS.getSetting('EnhancedGuideData') == 'true' and ignoreParse == False: 
@@ -2526,7 +2549,7 @@ class ChannelList:
         return showList
 
         
-    def buildInternetTVFileList(self, setting1, setting2, setting3, setting4):
+    def buildInternetTVFileList(self, setting1, setting2, setting3, setting4, limit):
         self.log('buildInternetTVFileList')
         showList = []
         seasoneplist = []
@@ -2551,7 +2574,8 @@ class ChannelList:
         self.log("buildInternetTVFileList, CHANNEL: " + str(self.settingChannel) + ", " + title + "  DUR: " + str(dur))
         tmpstr = str(dur) + ',' + title + "//" + "InternetTV" + "//" + description + "//" 'InternetTV' + "////" + LiveID + '\n' + setting2
         tmpstr = tmpstr.replace("\\n", " ").replace("\\r", " ").replace("\\\"", "\"")
-        showList.append(tmpstr)
+        for i in range(limit):
+            showList.append(tmpstr)
         return showList
 
         
@@ -2580,7 +2604,7 @@ class ChannelList:
         stop = 0
         YTMSG = setting1
         if self.youtube_ok != False:
-        
+            limit = int(limit)
             if setting2 == '1' or setting2 == '3' or setting2 == '4':
                 stop = (limit / 25)
                 YTMSG = 'Channel ' + setting1
@@ -2768,7 +2792,7 @@ class ChannelList:
         tmpstr = ''
         showList = []
         genre_filter = [setting1.lower()]
-        Playlist_List = 'https://pseudotv-live-community.googlecode.com/svn/youtube_playlists_networks.xml'
+        Playlist_List = 'http://raw.github.com/Lunatixz/pseudotv-live-community/master/youtube_playlists_networks.xml'
         
         try:
             f = Open_URL(Playlist_List)
@@ -3215,17 +3239,9 @@ class ChannelList:
         self.log("xmltv_ok, setting3 = " + str(setting3))
         self.xmltvValid = False
 
-        if setting3 == 'ustvnow':
-            if FileAccess.exists(USTVnowXML):
-                self.xmlTvFile = USTVnowXML
-                self.xmltvValid = True
-        elif setting3 == 'smoothstreams':
-            if FileAccess.exists(SSTVXML):
-                self.xmlTvFile = SSTVXML
-                self.xmltvValid = True
-        elif setting3 == 'ptvlguide':
-            if FileAccess.exists(PTVXML):
-                self.xmlTvFile = PTVXML
+        if setting3 == 'ptvlguide':
+            if FileAccess.exists(PTVLXML):
+                self.xmlTvFile = PTVLXML
                 self.xmltvValid = True
         elif setting3[0:4] == 'http':
             self.xmltvValid = self.url_ok(setting3)
@@ -3244,7 +3260,6 @@ class ChannelList:
         xbmc.log("Valid_ok Cache")
         self.Override_ok = REAL_SETTINGS.getSetting('Override_ok') == "true"
         self.log('Override Stream Validation is ' + str(self.Override_ok))
-        
         if Cache_Enabled == True and self.Override_ok == False:
             try:
                 result = daily.cacheFunction(self.Valid_ok_NEW, setting2)
@@ -3722,7 +3737,7 @@ class ChannelList:
                 try:
                     InternetBumperLST = []
                     duration = 3
-                    Bumper_List = 'https://pseudotv-live-community.googlecode.com/svn/bumpers.xml'
+                    Bumper_List = 'http://raw.github.com/Lunatixz/pseudotv-live-community/master/bumpers.xml'
                     f = Open_URL_CACHE(Bumper_List)
                     linesLST = f.readlines()
                     linesLST = linesLST[2:]
@@ -4981,24 +4996,9 @@ class ChannelList:
             self.log("Unable to get the playlist type.", xbmc.LOGERROR)
             return ''
             
-            
+
     def readXMLTV(self, fle, filename):
-        xbmc.log("readXMLTV Cache")
-        if Cache_Enabled == True: 
-            try:
-                result = daily.cacheFunction(self.readXMLTV_NEW, fle, filename)
-            except:
-                result = self.readXMLTV_NEW(fle, filename)
-                pass
-        else:
-            result = self.readXMLTV_NEW(fle, filename)
-        if not result:
-            result = []
-        return result  
-        
-            
-    def readXMLTV_NEW(self, fle, filename):
-        self.log('readXMLTV_NEW')
+        self.log('readXMLTV')
         try:
             channels = str(xmltv.read_channels(fle)) 
         except:
@@ -5035,7 +5035,7 @@ class ChannelList:
                         dname = dnames.group(1)
                                     
                         CHname = CHname.replace('-DT','DT').replace(' DT','DT').replace('DT','').replace('-HD','HD').replace(' HD','HD').replace('HD','').replace('-SD','SD').replace(' SD','SD').replace('SD','')
-                        matchLST = [CHname.upper(), 'W'+CHname.upper(), orgCHname, 'W'+orgCHname.upper()]
+                        matchLST = [CHname.upper(), 'W'+CHname.upper(), orgCHname.upper(), 'W'+orgCHname.upper(), orgCHname]
                         self.logDebug("findZap2itID, Cleaned CHname = " + CHname)
 
                         dnameID = dname + ' : ' + CHid
@@ -5058,7 +5058,7 @@ class ChannelList:
                     pass
                 
                 CHname = CHname.replace('-DT','DT').replace(' DT','DT').replace('DT','').replace('-HD','HD').replace(' HD','HD').replace('HD','').replace('-SD','SD').replace(' SD','SD').replace('SD','')
-                matchLST = [CHname.upper(), 'W'+CHname.upper(), orgCHname, 'W'+orgCHname.upper()]
+                matchLST = [CHname.upper(), 'W'+CHname.upper(), orgCHname.upper(), 'W'+orgCHname.upper(), orgCHname]
                 self.logDebug("findZap2itID, Cleaned CHname = " + CHname)
                 
                 for f in (file_detail):
@@ -5088,7 +5088,7 @@ class ChannelList:
                 CHid = dnameID.split(' : ')[1]
                 
                 if dname.upper() in matchLST: 
-                    self.log("findZap2itID, Match Found: " + str(CHname.upper()) +' == '+ str(dname.upper()) + ' ' + str(CHid))  
+                    self.log("findZap2itID, Match Found: " + CHname.upper() +' == '+ dname.upper() + ' ' + str(CHid))  
                     found = True
                     xbmc.executebuiltin( "Dialog.Close(busydialog)" )
                     return orgCHname, CHid
@@ -5102,144 +5102,8 @@ class ChannelList:
                 return orgCHname, CHid
         except Exception: 
             buggalo.onExceptionRaised()
-            
-        
-    def SyncUSTVnow(self, force=False):
-        self.log('SyncUSTVnow')
-        now  = datetime.datetime.today()
-        USTVnow = self.plugin_ok('plugin.video.ustvnow')
-        url = 'http://copy.com/D4juDEUQw9eBj2q3/ustvnow.xml'
-        if USTVnow == True:
-            try:
-                SyncUSTVnow_NextRun = REAL_SETTINGS.getSetting('SyncUSTVnow_NextRun')
-                SyncUSTVnow_NextRun = SyncUSTVnow_NextRun.split('.')[0]
-                SyncUSTVnow_NextRun = datetime.datetime.strptime(SyncUSTVnow_NextRun, '%Y-%m-%d %H:%M:%S')
-            except:
-                SyncUSTVnow_NextRun = now
-                REAL_SETTINGS.setSetting("SyncUSTVnow_NextRun",str(SyncUSTVnow_NextRun))  
-                pass
-            
-            #Force Download
-            if force or not FileAccess.exists(USTVnowXML):
-                self.log('SyncUSTVnow, Force Run')
-                SyncUSTVnow_NextRun = now
+             
 
-            if now >= SyncUSTVnow_NextRun:    
-                self.log('SyncUSTVnow, Updating')
-                   
-                #Remove old file before download
-                if FileAccess.exists(USTVnowXML):
-                    try:
-                        xbmcvfs.delete(USTVnowXML)
-                    except:
-                        pass  
-
-                #Download new file from ftp, then http backup.
-                try:
-                    anonFTPDownload('ustvnow.xml', USTVnowXML)
-                except:
-                    try:
-                        if not FileAccess.exists(USTVnowXML):
-                            download_silent(url, USTVnowXML)
-                    except:
-                        xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ('PseudoTV Live', "USTVnow XMLTV Update Failed!", 1000, THUMB) )
-                        pass
-                    
-                SyncUSTVnow_NextRun = (SyncUSTVnow_NextRun + datetime.timedelta(hours=48))
-                REAL_SETTINGS.setSetting("SyncUSTVnow_NextRun",str(SyncUSTVnow_NextRun))    
-        return
-            
-
-    def SyncSSTV(self, force=False):
-        self.log('SyncSSTV')
-        now  = datetime.datetime.today()
-        SSTV = self.plugin_ok('plugin.video.mystreamstv.beta')       
-        url = 'http://smoothstreams.tv/schedule/feed.xml'
-        # url = 'http://copy.com/g1Tjx7BvedETDg7f/SStream.xml'
-        
-        if SSTV == True:
-            try:
-                SyncSSTV_NextRun = REAL_SETTINGS.getSetting('SyncSSTV_NextRun')
-                SyncSSTV_NextRun = SyncSSTV_NextRun.split('.')[0]
-                SyncSSTV_NextRun = datetime.datetime.strptime(SyncSSTV_NextRun, '%Y-%m-%d %H:%M:%S')
-            except:
-                SyncSSTV_NextRun = now
-                pass
-            
-            #Force Download
-            if force or not FileAccess.exists(SSTVXML):
-                self.log('SyncSSTV, Force Run')
-                SyncSSTV_NextRun = now
-            
-            if now >= SyncSSTV_NextRun: 
-                self.log('SyncSSTV, Updating')
-
-                #Remove old file before download
-                if FileAccess.exists(SSTVXML):
-                    try:
-                        xbmcvfs.delete(SSTVXML)
-                    except:
-                        pass   
-                        
-                #Download new file from ftp, then http backup.
-                try:
-                    anonFTPDownload('SStream.xml', SSTVXML)
-                except:
-                    try:
-                        if not FileAccess.exists(SSTVXML):
-                            download_silent(url, SSTVXML)
-                    except:
-                        xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live","SmoothStream XMLTV Update Failed!", 1000, THUMB) )
-                        pass
-
-                SyncSSTV_NextRun = (SyncSSTV_NextRun + datetime.timedelta(hours=24))
-                REAL_SETTINGS.setSetting("SyncSSTV_NextRun",str(SyncSSTV_NextRun))
-        return
-        
-        
-    def SyncPTV(self, silent=False, force=False):
-        self.log('SyncPTV')
-        now  = datetime.datetime.today()
-        try:
-            SyncPTV_NextRun = REAL_SETTINGS.getSetting('SyncPTV_NextRun')
-            SyncPTV_NextRun = SyncPTV_NextRun.split('.')[0]
-            SyncPTV_NextRun = datetime.datetime.strptime(SyncPTV_NextRun, '%Y-%m-%d %H:%M:%S')
-        except:
-            SyncPTV_NextRun = now
-            REAL_SETTINGS.setSetting("SyncPTV_NextRun",str(SyncPTV_NextRun))
-            pass
-        
-        #Force Download
-        if force or not FileAccess.exists(PTVXML):
-            self.log('SyncPTV, Force Run')
-            SyncPTV_NextRun = now
-            
-        if now >= SyncPTV_NextRun: 
-            self.log('SyncPTV, Updating')
-
-            #Remove old file before download
-            if FileAccess.exists(PTVXML):
-                try:
-                    xbmcvfs.delete(PTVXML)
-                except:
-                    pass           
-          
-            #Download new file from ftp, then http backup.
-            try:
-                anonFTPDownload('ptvlguide.xml', PTVXML)
-            except:
-                try:
-                    if not FileAccess.exists(PTVXML):
-                        download_silent(url, PTVXML)
-                except:
-                    xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live","F.T.V XMLTV Update Failed!", 1000, THUMB) )
-                    pass             
-
-            SyncPTV_NextRun = (SyncPTV_NextRun + datetime.timedelta(hours=48))
-            REAL_SETTINGS.setSetting("SyncPTV_NextRun",str(SyncPTV_NextRun))
-        return
-           
-           
     def IPTVtuning(self, type, url, Random=False):
         self.log('IPTVtuning, type = ' + type + ' url = ' + url + ', Random = ' + str(Random))
         IPTVList = []
@@ -5376,22 +5240,22 @@ class ChannelList:
         ExternalSetting2List = []
         ExternalSetting3List = []
         ExternalSetting4List = []
-        RSSURL = 'https://pseudotv-live-community.googlecode.com/svn/rss.xml'
-        YoutubeChannelURL = 'https://pseudotv-live-community.googlecode.com/svn/youtube_channels.xml'
-        YoutubePlaylistURL = 'https://pseudotv-live-community.googlecode.com/svn/youtube_playlists.xml'
-        YoutubeChannelNetworkURL = 'https://pseudotv-live-community.googlecode.com/svn/youtube_channels_networks.xml'
-        YoutubePlaylistNetworkURL = 'https://pseudotv-live-community.googlecode.com/svn/youtube_playlists_networks.xml'
-        PlayonURL = 'https://pseudotv-live-community.googlecode.com/svn/playon.xml'
-        ExternalPlaylistURL = 'https://pseudotv-live-community.googlecode.com/svn/InternetTV_Playlists.xml'
+        RSSURL = 'http://raw.github.com/Lunatixz/pseudotv-live-community/master/rss.xml'
+        YoutubeChannelURL = 'http://raw.github.com/Lunatixz/pseudotv-live-community/master/youtube_channels.xml'
+        YoutubePlaylistURL = 'http://raw.github.com/Lunatixz/pseudotv-live-community/master/youtube_playlists.xml'
+        YoutubeChannelNetworkURL = 'http://raw.github.com/Lunatixz/pseudotv-live-community/master/youtube_channels_networks.xml'
+        YoutubePlaylistNetworkURL = 'http://raw.github.com/Lunatixz/pseudotv-live-community/master/youtube_playlists_networks.xml'
+        PlayonURL = 'http://raw.github.com/Lunatixz/pseudotv-live-community/master/playon.xml'
+        ExternalPlaylistURL = 'http://raw.github.com/Lunatixz/pseudotv-live-community/master/InternetTV_Playlists.xml'
 
         if list == 'Donor':
             PluginURL = BASEURL + 'addons.ini'
             InternetURL = BASEURL + 'internettv.ini'
             LiveURL = BASEURL + 'livetv.ini'
         else:
-            PluginURL = 'https://pseudotv-live-community.googlecode.com/svn/addons.xml'
-            InternetURL = 'https://pseudotv-live-community.googlecode.com/svn/internettv.xml'
-            LiveURL = 'https://pseudotv-live-community.googlecode.com/svn/livetv.xml'
+            PluginURL = 'http://raw.github.com/Lunatixz/pseudotv-live-community/master/addons.xml'
+            InternetURL = 'http://raw.github.com/Lunatixz/pseudotv-live-community/master/internettv.xml'
+            LiveURL = 'http://raw.github.com/Lunatixz/pseudotv-live-community/master/livetv.xml'
         
         if type == 'LiveTV':
             url = LiveURL
@@ -5421,7 +5285,11 @@ class ChannelList:
             url = ExternalPlaylistURL
 
         try:
-            data = Open_URL_UP(url, USERPASS)
+            if list == 'Donor':
+                data = Open_URL_UP(url, USERPASS)
+            else:
+                data = Read_URL(url)
+            
             data = data[2:] #remove first two unwanted lines
             data = ([x for x in data if x != '']) #remove empty lines
             
