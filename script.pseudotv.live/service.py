@@ -99,5 +99,4 @@ def autostart():
     xbmc.executebuiltin('RunScript("' + ADDON_PATH + '/default.py' + '")')
     return
     
-REAL_SETTINGS.setSetting('SyncXMLTV_Running', "false")
 service()

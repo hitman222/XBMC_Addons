@@ -660,8 +660,8 @@ def copyanything(src, dst):
             
 def SyncXMLTV():
     log('SyncXMLTV') 
-    if REAL_SETTINGS.getSetting("SyncXMLTV_Running") == "false":
-        REAL_SETTINGS.setSetting('SyncXMLTV_Running', "true")
+    if xbmcgui.Window(10000).getProperty("SyncXMLTV_Running") != "True":
+        xbmcgui.Window(10000).setProperty("SyncXMLTV_Running", "True")
         
         if FileAccess.exists(XMLTV_CACHE_LOC) == False:
             try:
@@ -669,7 +669,7 @@ def SyncXMLTV():
             except:
                 return
         SyncPTVL()
-        REAL_SETTINGS.setSetting('SyncXMLTV_Running', "false")
+        xbmcgui.Window(10000).setProperty("SyncXMLTV_Running", "False")
     return
     
                            
@@ -685,10 +685,10 @@ def SyncPTVL(force=False):
         SyncPTV_LastRun = "1970-01-01 23:59:00.000000"
         REAL_SETTINGS.setSetting("SyncPTV_NextRun",SyncPTV_LastRun)
     
-    SyncPTV_LastRun = datetime.datetime.strptime(SyncPTV_LastRun, "%Y-%m-%d %H:%M:%S.%f")
+    SyncPTV = datetime.datetime.strptime(SyncPTV_LastRun, "%Y-%m-%d %H:%M:%S.%f")
     log('SyncPTVL, Now = ' + str(now) + ', SyncPTV_LastRun = ' + str(SyncPTV_LastRun))
     
-    if now > SyncPTV_LastRun:         
+    if now > SyncPTV:         
         #Remove old file before download
         if FileAccess.exists(PTVLXML):
             try:
@@ -698,11 +698,11 @@ def SyncPTVL(force=False):
                 log('SyncPTVL, Removing old PTVLXML Failed!')
 
         #Download new file from ftp, then http backup.
-        try:
-            anonFTPDownload('ptvlguide.xml', PTVLXML)
-            MSG = "XMLTV Update Complete"
-        except:
-            MSG = "XMLTV Update Failed!"
+        # try:
+            # anonFTPDownload('ptvlguide.xml', PTVLXML)
+            # MSG = "XMLTV Update Complete"
+        # except:
+            # MSG = "XMLTV Update Failed!"
             
         if MSG:
             log('SyncPTVL, ' + MSG)

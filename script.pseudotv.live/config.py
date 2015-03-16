@@ -49,7 +49,8 @@ NUMBER_CHANNEL_TYPES = 17
 class ConfigWindow(xbmcgui.WindowXMLDialog):
     def __init__(self, *args, **kwargs):
         self.log("__init__")
-        if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True" and REAL_SETTINGS.getSetting("SyncXMLTV_Running") == "false":
+        if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True":
+        # if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True" and xbmcgui.Window(10000).getProperty("SyncXMLTV_Running") != "True":
             xbmcgui.WindowXMLDialog.__init__(self, *args, **kwargs)
             self.madeChanges = 0
             self.showingList = True

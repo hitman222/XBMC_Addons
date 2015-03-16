@@ -73,7 +73,8 @@ def PseudoTV():
 
     
 # Adapting a solution from ronie (http://forum.xbmc.org/showthread.php?t=97353)
-if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True" and REAL_SETTINGS.getSetting("SyncXMLTV_Running") == "false":   
+if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True":  
+# if xbmcgui.Window(10000).getProperty("PseudoTVRunning") != "True" and xbmcgui.Window(10000).getProperty("SyncXMLTV_Running") != "True":   
     try:
         PTVL_Version = REAL_SETTINGS.getSetting("PTVL_Version")
     except:
