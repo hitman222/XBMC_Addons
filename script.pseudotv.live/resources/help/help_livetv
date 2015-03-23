@@ -1,0 +1,13 @@
+[B]LiveTV uses a single stream source with matching listing data[/B]
+
+[COLOR=blue][B]Source:[/B][/COLOR] - Stream Source.
+
+[COLOR=blue][B]Click to browse:[/B][/COLOR] - Browse Source and select a single file or stream.
+
+[COLOR=blue][B]XMLTV Name:[/B][/COLOR] - Name of XMLTV file or Source, ie. "pvr" = data from Kodi's pvr backend.
+
+[COLOR=blue][B]Channel Name:[/B][/COLOR] - Name of source as it appears in the XMLTV file or Kodi's pvr backend.
+
+[COLOR=blue][B]Channel ID:[/B][/COLOR] - Automatically find matching Channel ID by Channel Name, else select manually.
+
+It's recommended you provide your own XMLTV files for dependability and performance. "ptvlguide" is a universal xmltv file that provides listing data for various PseudoTV Live friendly sources ie (ustvnow,filmon,pluto.tv,etc).
