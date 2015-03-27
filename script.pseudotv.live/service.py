@@ -17,11 +17,9 @@
 # along with PseudoTV Live.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import os, shutil, datetime, time, random
-import xbmc, xbmcgui, xbmcaddon, xbmcvfs
+import os, xbmc, xbmcgui, xbmcaddon, xbmcvfs
 
 from time import sleep
-from resources.lib.utils import *
 
 # Plugin Info
 ADDON_ID = 'script.pseudotv.live'
@@ -32,7 +30,9 @@ ADDON_PATH = REAL_SETTINGS.getAddonInfo('path')
 ADDON_VERSION = REAL_SETTINGS.getAddonInfo('version')
 THUMB = (xbmc.translatePath(os.path.join(ADDON_PATH, 'resources', 'images')) + '/' + 'icon.png')
 
-def HubSwap(): # Swap Org/Hub versions if 'Hub Installer' found.
+
+# Swap Org/Hub versions if 'Hub Installer' found.
+def HubSwap():
     icon = ADDON_PATH + '/icon'
     HUB = xbmc.getCondVisibility('System.HasAddon(plugin.program.addoninstaller)') == 1
     
@@ -44,9 +44,9 @@ def HubSwap(): # Swap Org/Hub versions if 'Hub Installer' found.
     else:
         xbmc.log('script.pseudotv.live-Service: HubSwap = Master')
         REAL_SETTINGS.setSetting("Hub","false")
-    return
-          
-          
+    return          
+
+
 def donorCHK():
     DonorPath = (os.path.join(ADDON_PATH, 'resources', 'lib', 'Donor.pyo'))
     DL_DonorPath = (os.path.join(ADDON_PATH, 'resources', 'lib', 'Donor.py'))
@@ -68,6 +68,7 @@ def donorCHK():
     return
         
         
+# execute service functions
 def service():
     xbmc.log('script.pseudotv.live-Service: Init')
     try:
@@ -77,11 +78,9 @@ def service():
                 donorCHK()
                 HubSwap()
                 
-                if REAL_SETTINGS.getSetting("SyncXMLTV_Enabled") == "true":
-                    SyncXMLTV()
-
-                if REAL_SETTINGS.getSetting("Auto_Start") == "true" and xbmcgui.Window(10000).getProperty("PseudoTVautostart") != "True":
-                    xbmcgui.Window(10000).setProperty("PseudoTVautostart", "True")
+                # if autostart enabled, and first boot. Start PTVL!
+                if REAL_SETTINGS.getSetting("Auto_Start") == "true" and xbmcgui.Window(10000).getProperty("Auto_Start_Exit") != "True":
+                    xbmcgui.Window(10000).setProperty("Auto_Start_Exit", "True")
                     autostart()
                 
             xbmc.log('script.pseudotv.live-Service: Idle')

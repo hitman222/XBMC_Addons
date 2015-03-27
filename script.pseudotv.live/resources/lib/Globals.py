@@ -157,7 +157,8 @@ else:
 
 #XMLTV FILENAME
 PTVLXML = (os.path.join(XMLTV_CACHE_LOC, 'ptvlguide.xml'))
-      
+PTVLXMLZIP = (os.path.join(LOCK_LOC, 'ptvlguide.zip'))
+
 # SKIN SELECT
 # Custom skin downloader todo.    
 if int(REAL_SETTINGS.getSetting('SkinSelector')) == 0:

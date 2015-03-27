@@ -1,3 +1,8 @@
+[*] Tweaked Plugin and UPNP parsing and Video Mirroring.
+[*] HDhomerun in-app configuration and improved HDHomeRun auto-tuning *Thanks ruuk
+[*] Kodi PVR backend in-app configuration, improved XMLTV matching.
+[*] Various tweaks & bug corrections
+[*] [COLOR=blue][B]^ v.0.6.1 ^[/B][/COLOR]
 [*] Universal xmltv file "ptvlguide" updates via background service when enabled in settings "Enable xmltv service".
     ptvlguide should updated every 24hrs, PseudoTV Live will not start until file is finished downloading.
 [*] Chtype 6 and 7 (ie "TV Show" & "Directory") uses "logo.png" if found as a channel logo.

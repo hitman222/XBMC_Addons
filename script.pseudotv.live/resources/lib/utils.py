@@ -43,6 +43,7 @@ flePath = xbmc.translatePath(os.path.join(Path, fle))
 PTVL_SKIN_SELECT_FLE = xbmc.translatePath(os.path.join(PTVL_SKIN_SELECT, 'script.pseudotv.live.EPG.xml'))         
 DSPath = xbmc.translatePath(os.path.join(XBMC_SKIN_LOC, 'DialogSeekBar.xml'))
 
+
 ###############################
 #videowindow
 a = '<!-- PATCH START -->'
@@ -56,7 +57,29 @@ y = '</defaultcontrol>'
 z = '</defaultcontrol>\n    <visible>Window.IsActive(fullscreenvideo) + !Window.IsActive(script.pseudotv.TVOverlay.xml) + !Window.IsActive(script.pseudotv.live.TVOverlay.xml)</visible>'
 ###############################
 
-
+def convert(s):
+    log('convert')       
+    try:
+        return s.group(0).encode('latin1').decode('utf8')
+    except:
+        return s.group(0)
+                      
+                      
+def makeSTRM(mediapath):
+    log('makeSTRM')            
+    if not FileAccess.exists(STRM_CACHE_LOC):
+        FileAccess.makedirs(STRM_CACHE_LOC)
+    path = (mediapath.encode('base64'))[:16] + '.strm'
+    filepath = os.path.join(STRM_CACHE_LOC,path)
+    if FileAccess.exists(filepath):
+        return filepath
+    else:
+        fle = FileAccess.open(filepath, "w")
+        fle.write("%s" % mediapath)
+        fle.close()
+        return filepath
+   
+   
 def hashfile(afile, hasher, blocksize=65536):
     buf = afile.read(blocksize)
     while len(buf) > 0:
@@ -127,7 +150,7 @@ def Backup(org, bak):
                 pass
         xbmcvfs.copy(org, bak)
     
-    if DEBUG == 'true':
+    if NOTIFY == 'true':
         xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "Backup Complete", 1000, THUMB) )
         
             
@@ -222,7 +245,7 @@ def infoDialog(str, header=ADDON_NAME):
     except: xbmc.executebuiltin("Notification(%s,%s, 3000, %s)" % (header, str, THUMB))
 
     
-def okDialog(str1, str2, header=ADDON_NAME):
+def okDialog(str1, str2='', header=ADDON_NAME):
     xbmcgui.Dialog().ok(header, str1, str2)
 
     
@@ -275,6 +298,7 @@ def VersionCompare():
     link = source.read()
     source.close()
     match = re.compile('" version="(.+?)" name="PseudoTV Live"').findall(link)
+    xbmcgui.Window(10000).setProperty("PseudoTVOutdated", "False")
     
     for vernum in match:
         log("Current Version = " + str(vernum))
@@ -292,9 +316,7 @@ def VersionCompare():
             dialog = xbmcgui.Dialog()
             confirm = xbmcgui.Dialog().yesno('[B]PseudoTV Live Update Available![/B]', "Your version is outdated." ,'The current available version is '+str(match[0]),'Would you like to install the PseudoTV Live repository to stay updated?',"Cancel","Install")
             if confirm:
-                UpdateFiles()     
-        else:
-            xbmcgui.Window(10000).setProperty("PseudoTVOutdated", "False")
+                UpdateFiles()
     return
     
     
@@ -324,6 +346,7 @@ def UpdateFiles():
     except: 
         MSG = 'Failed to install Lunatixz Repository, Try Again Later'
         pass
+        
     xbmc.executebuiltin("XBMC.UpdateLocalAddons()"); 
     xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", MSG, 1000, THUMB) )
     return
@@ -343,8 +366,7 @@ def VideoWindow():
                     log('custom_script.pseudotv.live_9506.xml Copied')
                     VideoWindowPatch()   
                     if FreshInstall == True:
-                        if dlg.yesno("PseudoTV Live", "Installed Videowindow patch, reboot required! Exit XBMC?"):
-                            xbmc.executebuiltin( "XBMC.AlarmClock(shutdowntimer,XBMC.Quit(),%d,true)" % ( 0.5, ) )
+                        xbmc.executebuiltin("ReloadSkin()")
                 else:
                     raise
             else:
@@ -667,16 +689,15 @@ def SyncXMLTV():
             try:
                 xbmcvfs.mkdir(XMLTV_CACHE_LOC)
             except:
-                return
+                return           
         SyncPTVL()
-        xbmcgui.Window(10000).setProperty("SyncXMLTV_Running", "False")
+    xbmcgui.Window(10000).setProperty("SyncXMLTV_Running", "False")
     return
     
                            
 def SyncPTVL(force=False):
     log('SyncPTVL')
     now  = datetime.datetime.today()  
-    
     try:
         SyncPTV_LastRun = REAL_SETTINGS.getSetting('SyncPTV_NextRun')
         if not SyncPTV_LastRun or FileAccess.exists(PTVLXML) == False or force == True:
@@ -684,8 +705,12 @@ def SyncPTVL(force=False):
     except:
         SyncPTV_LastRun = "1970-01-01 23:59:00.000000"
         REAL_SETTINGS.setSetting("SyncPTV_NextRun",SyncPTV_LastRun)
-    
-    SyncPTV = datetime.datetime.strptime(SyncPTV_LastRun, "%Y-%m-%d %H:%M:%S.%f")
+    try:
+        SyncPTV = datetime.datetime.strptime(SyncPTV_LastRun, "%Y-%m-%d %H:%M:%S.%f")
+    except:
+        SyncPTV_LastRun = "1970-01-01 23:59:00.000000"
+        SyncPTV = datetime.datetime.strptime(SyncPTV_LastRun, "%Y-%m-%d %H:%M:%S.%f")
+        
     log('SyncPTVL, Now = ' + str(now) + ', SyncPTV_LastRun = ' + str(SyncPTV_LastRun))
     
     if now > SyncPTV:         
@@ -698,16 +723,20 @@ def SyncPTVL(force=False):
                 log('SyncPTVL, Removing old PTVLXML Failed!')
 
         #Download new file from ftp, then http backup.
-        # try:
-            # anonFTPDownload('ptvlguide.xml', PTVLXML)
-            # MSG = "XMLTV Update Complete"
-        # except:
-            # MSG = "XMLTV Update Failed!"
+        try:
+            anonFTPDownload('ptvlguide.zip', PTVLXMLZIP)
+        except:
+            return
             
-        if MSG:
-            log('SyncPTVL, ' + MSG)
-            xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live",MSG, 1000, THUMB) )      
-
+        if FileAccess.exists(PTVLXMLZIP):
+            all(PTVLXMLZIP,XMLTV_CACHE_LOC,'')
+            try:
+                xbmcvfs.delete(PTVLXMLZIP)
+                log('SyncPTVL, Removed old PTVLXMLZIP')
+            except:
+                log('SyncPTVL, Removing old PTVLXMLZIP Failed!')
+                
+        xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live","External Guide-data Update Complete", 1000, THUMB) )      
         SyncPTV_NextRun = ((now + datetime.timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S.%f"))
         log('SyncPTVL, Now = ' + str(now) + ', SyncPTV_NextRun = ' + str(SyncPTV_NextRun))
         REAL_SETTINGS.setSetting("SyncPTV_NextRun",str(SyncPTV_NextRun))     
