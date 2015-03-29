@@ -113,10 +113,11 @@ class MyPlayer(xbmc.Player):
                 except: 
                     self.overlay.Error('Video Mirroring configuration error','Please verify IP and Port of Kodi Client')
                     pass
+            self.overlay.PrimeSetOnNow()
         else:
             if self.ignoreNextStop:
-                self.overlay.PlayerTimeout(-1)
-            
+                self.overlay.PlayerTimeout()
+                    
             
     def onPlayBackEnded(self):
         self.log('onPlayBackEnded') 
@@ -726,6 +727,19 @@ class TVOverlay(xbmcgui.WindowXMLDialog):
             pass
    
    
+    def PrimeSetOnNow(self):
+        self.log('PrimeSetOnNow')   
+        try:
+            if self.SetOnNowTimer.isAlive():
+                self.SetOnNowTimer.cancel()
+        except:
+            pass
+            
+        self.SetOnNowTimer = threading.Timer(2.0, self.setOnNow)
+        self.SetOnNowTimer.name = "SetOnNowTimer"
+        self.SetOnNowTimer.start()
+   
+   
     def setOnNow(self):
         self.log('setOnNow')   
         self.OnNowTitleLst = []        
@@ -995,11 +1009,12 @@ class TVOverlay(xbmcgui.WindowXMLDialog):
         self.runActions(RULES_ACTION_OVERLAY_SET_CHANNEL_END, channel, self.channels[channel - 1])
             
         if self.Player.ignoreNextStop:
-            self.PlayerTimeout(-1)
+            self.PlayerTimeout()
                             
         if self.UPNP:
-            self.PlayUPNP(mediapath, self.seektime)   
+            self.PlayUPNP(mediapath, self.seektime)
 
+        self.PrimeSetOnNow()
         self.log('setChannel return')
         
         
@@ -1542,17 +1557,14 @@ class TVOverlay(xbmcgui.WindowXMLDialog):
         try:
             self.hideInfo()
             self.hidePOP()
-            # skin control todo
-            # xpos = int(self.getControl(132).getLabel())
-            # ypos = int(self.getControl(132).getLabel2())
-            # print xpos, ypos
+            # SMWidth = int(self.getControl(132).getWidth())
+            # SMHeight = int(self.getControl(132).getHeight())
             
             if not self.showingMenuAlt:
                 xbmc.executebuiltin( "ActivateWindow(busydialog)" )
                 curchannel = 0
                 self.showingMenuAlt = True
                 self.setOnNow()
-                # 'button-nofocus.png'
                 self.list = xbmcgui.ControlList(198, 160, -50, 600, 'font12', self.myEPG.textcolor, BUTTON_NO_FOCUS_ALT, BUTTON_FOCUS, self.myEPG.focusedcolor, 0, 0, 0, 0, 40, 0, 100)
                 self.list.setWidth(260)
                 self.addControl(self.list)
@@ -1579,9 +1591,9 @@ class TVOverlay(xbmcgui.WindowXMLDialog):
             self.MenuAltTimer = threading.Timer(timer, self.hideMenuAlt)
             self.MenuAltTimer.name = "MenuAltTimer" 
             self.MenuAltTimer.start()
-        except:
-            pass
-    
+        except Exception,e:
+            self.log("ShowMenuAlt, Failed! " + str(e))
+
     
     def pauseMenuAlt(self):
         self.log("pauseMenuAlt")
@@ -2332,7 +2344,7 @@ class TVOverlay(xbmcgui.WindowXMLDialog):
         self.startNotificationTimer()
 
         
-    def PlayerTimeout(self, start_time):
+    def PlayerTimeout(self, start_time=-1):
         self.log("PlayerTimeout, ActionTimeInt = " + str(self.ActionTimeInt))      
         try:
             if self.PlayerTimeoutThread.isAlive():
@@ -2944,6 +2956,12 @@ class TVOverlay(xbmcgui.WindowXMLDialog):
             GlobalFileLock.unlockFile('MasterLock')
         
         GlobalFileLock.close()
+        
+        try:
+            if self.SetOnNowTimer.isAlive():
+                self.SetOnNowTimer.cancel()
+        except:
+            pass
         
         try:
             if self.playerTimer.isAlive():

@@ -1,5 +1,5 @@
 <window>
-    <allowoverlay>no</allowoverlay>   
+    <allowoverlay>yes</allowoverlay>   
     <onload>ActivateWindow(9506)</onload>
     <onunload>ActivateWindow(12005)</onunload>
     <onload condition="System.HasAddon(script.tv.show.next.aired)">RunScript(script.tv.show.next.aired,backend=True)</onload>

@@ -1629,7 +1629,7 @@ class ChannelList:
                                     self.updateDialog.update(self.updateDialogProgress, "Updating channel " + str(self.settingChannel), "adding Videos", "added " + str(filecount) + " entries")
                             
                             tmpstr = str(dur) + ','
-                            titles = re.search('"label" *: *"(.*?)"', f)
+                            titles = re.search('"label" *: *"(.*?)",', f)
                             showtitles = re.search('"showtitle" *: *"(.*?)"', f)
                             plots = re.search('"plot" *: *"(.*?)",', f)
                             plotoutlines = re.search('"plotoutline" *: *"(.*?)",', f)
@@ -4350,7 +4350,7 @@ class ChannelList:
                     break
             except:
                 pass
-        self.log("playon_player, " + PlayonPath)
+        self.log("playon_player = " + str(PlayonPath))
         return PlayonPath
         
     
@@ -4503,20 +4503,9 @@ class ChannelList:
                     file = files.group(1)
                     label = self.CleanLabels(labels.group(1))
 
-                    for i in range(len(excludeLST)):
-                        if excludeLST[i] == label.lower():   
-                            self.log('PluginWalk, ' + label.lower() + ' in excludeLST')
-                            excludeMatch = True
-                            break
-                        else:
-                            excludeMatch = False
-                            
-                    if excludeMatch == False:
-                        self.log('PluginWalk, ' + label.lower() + ' not in excludeLST')
-
+                    if label.lower() not in excludeLST:
                         if filetype == 'directory':
                             self.log('PluginWalk, directory')
-                            
                             #try to speed up parsing by not over searching directories when media limit is low
                             if self.filecount < limit and self.dircount < dirlimit:
 
@@ -4850,9 +4839,12 @@ class ChannelList:
                                     else:
                                         fileList.append(tmpstr)
                             else:
-                                self.log('PluginWalk, filecount break')
+                                self.log('PluginWalk, filecount break/reset')
                                 self.filecount = 0
                                 break
+                    else:
+                        self.log('PluginWalk, ' + label.lower() + ' in excludeLST')
+                        
             for item in dirs:
                 self.log('PluginWalk, recursive directory walk')
 

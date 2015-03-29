@@ -203,5 +203,6 @@
     <string id="39997">Include BCT Files</string>
     <string id="30994">Plugin Validation Level</string>
     <string id="30992">Disable Google Analytics</string>
-    <string id="30999">Optimize Configurations (Coming Soon)</string>    
+    <string id="30888">Delete Channel Configurations</string>    
+    <string id="30999">Defrag Channel Configurations (Coming Soon)</string>    
 </strings>

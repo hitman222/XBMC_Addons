@@ -1,3 +1,4 @@
+[*] Improved "OnNow" load time.
 [*] Tweaked Plugin and UPNP parsing and Video Mirroring.
 [*] HDhomerun in-app configuration and improved HDHomeRun auto-tuning *Thanks ruuk
 [*] Kodi PVR backend in-app configuration, improved XMLTV matching.

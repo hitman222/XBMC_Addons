@@ -229,6 +229,7 @@
         <setting id="showNextItem" type="bool" label="39994" visible="false" default="true"/>
         <setting id="plugin_ok_level" type="enum" label="30994" values="Low|High" default="0"/>
         <setting id="ga_disable" type="bool" label="30992" default="false"/>
-        <setting id="Defrag" type="action" label="30999" action="RunScript($CWD/defrag.py)"/>
+        <setting id="Delete" type="action" label="30888" action="RunScript($CWD/utilities.py, -DeleteSettings2)"/>
+        <setting id="Defrag" type="action" label="30999" action="RunScript($CWD/utilities.py, -DefragSettings2)"/>
     </category>
 </settings>

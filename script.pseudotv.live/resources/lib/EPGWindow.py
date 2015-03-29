@@ -117,20 +117,22 @@ class EPGWindow(xbmcgui.WindowXMLDialog):
         
         try:
             textcolor = int(self.getControl(100).getLabel(), 16)            
-            self.textcolor = hex(textcolor)[2:]
+            if textcolor > 0:
+                self.textcolor = hex(textcolor)[2:]
         except:
-            self.textcolor = "FFFFFFFF"
+            pass
         
         try:
             focusedcolor = int(self.getControl(99).getLabel(), 16)
-            self.focusedcolor = hex(focusedcolor)[2:]
+            if focusedcolor > 0:
+                self.focusedcolor = hex(focusedcolor)[2:]
         except:
-            self.focusedcolor = "FF7d7d7d"
-
+            pass
+        
         try:
             self.textfont = self.getControl(105).getLabel()
         except:
-            self.textfont  = "font14"
+            pass
 
         try:
             if self.setChannelButtons(time.time(), self.MyOverlayWindow.currentChannel) == False:
@@ -195,7 +197,22 @@ class EPGWindow(xbmcgui.WindowXMLDialog):
             REAL_SETTINGS.setSetting("type2EXT_EPG",self.type2EXT)
         except:
             pass
-
+            
+        #Check if VideoWindow Patch found, Toggle Visible.
+        if self.MyOverlayWindow.VideoWindow == True:
+            self.log('VideoWindow = True')
+            try:
+                self.getControl(523).setVisible(True)
+                self.getControl(524).setLabel(self.MyOverlayWindow.PVRtitle)
+            except:
+                pass
+        else:
+            self.log('VideoWindow = False')
+            try:
+                self.getControl(523).setVisible(False)
+            except:
+                pass
+                
         self.log('onInit return')
 
         
@@ -336,7 +353,6 @@ class EPGWindow(xbmcgui.WindowXMLDialog):
     # create the buttons for the specified channel in the given row
     def setButtons(self, starttime, curchannel, row):
         self.logDebug('setButtons ' + str(starttime) + ", " + str(curchannel) + ", " + str(row))
-        
         try:
             curchannel = self.MyOverlayWindow.fixChannel(curchannel)
             basex, basey = self.getControl(111 + row).getPosition()
@@ -536,7 +552,7 @@ class EPGWindow(xbmcgui.WindowXMLDialog):
         except:
             self.log("Exception in setButtons", xbmc.LOGERROR)
             self.log(traceback.format_exc(), xbmc.LOGERROR)
-
+            
         self.logDebug('setButtons return')
         return True
 
@@ -932,22 +948,7 @@ class EPGWindow(xbmcgui.WindowXMLDialog):
             self.log("Unknown EPG Chtype Exception", xbmc.LOGERROR)
             chtype = (ADDON_SETTINGS.getSetting('Channel_' + str(newchan) + '_type'))
             pass
-            
-        #Check if VideoWindow Patch found, Toggle Visible.
-        if self.MyOverlayWindow.VideoWindow == True:
-            self.log('VideoWindow = True')
-            try:
-                self.getControl(523).setVisible(True)
-                self.getControl(524).setLabel(self.MyOverlayWindow.PVRtitle)
-            except:
-                pass
-        else:
-            self.log('VideoWindow = False')
-            try:
-                self.getControl(523).setVisible(False)
-            except:
-                pass
-                
+                            
         #Change Label when Dynamic artwork enabled
         try:
             if self.infoOffset > 0:
