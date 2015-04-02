@@ -231,6 +231,7 @@ class Migrate:
         if Globals.REAL_SETTINGS.getSetting("autoFindLivePVR") == "true":
             self.log("autoTune, adding Live PVR Channels")
             self.updateDialog.update(self.updateDialogProgress,"AutoTuning","adding PVR Channels"," ")
+            chanlist.cached_readXMLTV = []
             PVRnum = 0
             try:
                 PVRNameList, PVRPathList = chanlist.fillPVR()
@@ -274,6 +275,7 @@ class Migrate:
         # LiveTV - HDHomeRun
         self.updateDialogProgress = 11
         if Globals.REAL_SETTINGS.getSetting("autoFindLiveHD") != "0" and Globals.REAL_SETTINGS.getSetting("xmltvLOC") and Globals.REAL_SETTINGS.getSetting('autoFindLiveHDPath'):
+            chanlist.cached_readXMLTV = []
             xmltvLOC = xbmc.translatePath(Globals.REAL_SETTINGS.getSetting("xmltvLOC"))
             xmlTvFile = os.path.join(xmltvLOC, 'xmltv.xml')
             HDstrmPath = Globals.REAL_SETTINGS.getSetting('autoFindLiveHDPath') + '/'
@@ -359,6 +361,7 @@ class Migrate:
         if Globals.REAL_SETTINGS.getSetting("autoFindUSTVNOW") == "true":
             self.log("autoTune, adding USTVnow Channels")
             self.updateDialog.update(self.updateDialogProgress,"AutoTuning","adding USTVnow Channels"," ")
+            chanlist.cached_readXMLTV = []
             USTVnum = 0
             USTVnow = chanlist.plugin_ok('plugin.video.ustvnow')
                 

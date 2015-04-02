@@ -249,10 +249,10 @@ def okDialog(str1, str2='', header=ADDON_NAME):
     xbmcgui.Dialog().ok(header, str1, str2)
 
     
-def selectDialog(list, header=ADDON_NAME):
+def selectDialog(list, header=ADDON_NAME, autoclose=0):
     log('selectDialog')
     if len(list) > 0:
-        select = xbmcgui.Dialog().select(header, list)
+        select = xbmcgui.Dialog().select(header, list, autoclose)
         return select
 
     

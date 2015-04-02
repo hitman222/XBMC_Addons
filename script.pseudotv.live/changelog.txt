@@ -1,4 +1,6 @@
-[*] Improved "OnNow" load time.
+[*] Easy in-app channel number changing ('i' or info button) and Easy remove channel ('Del' or remove/delete button).
+[*] Added clear all channel button(remove settings2.xml) under "Misc" settings.
+[*] Improved "OnNow" load times and LiveTV Parsing.
 [*] Tweaked Plugin and UPNP parsing and Video Mirroring.
 [*] HDhomerun in-app configuration and improved HDHomeRun auto-tuning *Thanks ruuk
 [*] Kodi PVR backend in-app configuration, improved XMLTV matching.

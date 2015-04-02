@@ -48,6 +48,18 @@
                 <label>Channel</label>
             </control>
             <control type="label">
+                <left>40</left>
+                <top>480</top>
+                <width>5000</width>
+                <height>35</height>
+                <font>font12</font>
+                <textcolor>blue</textcolor>
+                <shadowcolor>black</shadowcolor>
+                <align>left</align>
+                <aligny>center</aligny>
+                <label>[B][I][/B] = Change Channel #  |  [B][Del][/B] - Remove Channel</label>
+            </control>
+            <control type="label">
                 <left>680</left>                
                 <top>0</top>
                 <width>100</width>
@@ -226,7 +238,7 @@
             <!-- Submit Configuration -->
             <control type="button" id="115">
                 <left>205</left>
-                <top>400</top>
+                <top>395</top>
                 <width>410</width>
 				<height>40</height>
 				<align>center</align>
@@ -272,7 +284,7 @@
                 <textcolor>gray</textcolor>
                 <focusedcolor>white</focusedcolor>
                 <onup>114</onup>
-                <onleft>113</onleft>
+                <onleft>554</onleft>
                 <onright>113</onright>
                 <align>center</align>
                 <colordiffuse></colordiffuse>
@@ -291,14 +303,31 @@
                 <focusedcolor>white</focusedcolor>
                 <onup>114</onup>
                 <onleft>112</onleft>
+                <onleft>554</onleft>
                 <onright>555</onright>
                 <align>center</align>
                 <colordiffuse></colordiffuse>
             </control>
-            
+            <!-- Num Change -->
+            <control type="button" id="554">
+                <left>161</left>
+                <top>485</top>
+                <width>40</width>
+				<height>40</height>
+                <label>#</label>
+                <texturefocus border="5">ptv_button-focus.png</texturefocus>
+                <texturenofocus border="5">ptv_button-nofocus.png</texturenofocus>
+                <textcolor>gray</textcolor>
+                <focusedcolor>white</focusedcolor>
+                <onup>114</onup>
+                <onleft>555</onleft>
+                <onright>112</onright>
+                <align>center</align>
+                <colordiffuse></colordiffuse>
+            </control>
             <!-- HELP -->
             <control type="button" id="555">
-                <left>615</left>
+                <left>618</left>
                 <top>485</top>
                 <width>40</width>
 				<height>40</height>
@@ -309,7 +338,7 @@
                 <focusedcolor>white</focusedcolor>
                 <onup>114</onup>
                 <onleft>113</onleft>
-                <onright>112</onright>
+                <onright>554</onright>
                 <align>center</align>
                 <colordiffuse></colordiffuse>
             </control>

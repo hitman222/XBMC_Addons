@@ -207,7 +207,6 @@ class TVOverlay(xbmcgui.WindowXMLDialog):
         self.LastChannel = 0
         self.InfTimer = INFOBAR_TIMER[int(REAL_SETTINGS.getSetting('InfoTimer'))]
         self.Artdownloader = Artdownloader()
-        self.VideoWindow = False
         self.notPlayingAction = 'Up'
         self.ActionTimeInt = float(REAL_SETTINGS.getSetting("ActionTimeInt"))
         self.Browse = ''
@@ -222,6 +221,8 @@ class TVOverlay(xbmcgui.WindowXMLDialog):
 
         if FileAccess.exists(os.path.join(XBMC_SKIN_LOC, 'custom_script.pseudotv.live_9506.xml')):
             self.VideoWindow = True
+        else:
+            self.VideoWindow = False
 
         for i in range(3):
             self.channelLabel.append(xbmcgui.ControlImage(50 + (50 * i), 50, 50, 50, IMAGES_LOC + 'solid.png', colorDiffuse = self.channelbugcolor))
@@ -558,6 +559,7 @@ class TVOverlay(xbmcgui.WindowXMLDialog):
         else:
             self.isMaster = True
         
+        self.backupFiles(False)
         self.timeStarted = time.time()
         self.channels = self.channelList.setupList(True)  
         # self.maxChannels = len(self.channels)   
@@ -654,15 +656,17 @@ class TVOverlay(xbmcgui.WindowXMLDialog):
 
         if CHANNEL_SHARING == False:
             return
-
-        updatedlg.update(1, "Initializing", "Copying Channels...")
+            
+        if updatedlg:
+            updatedlg.update(1, "Initializing", "Copying Channels...")
         realloc = REAL_SETTINGS.getSetting('SettingsFolder')
         FileAccess.copy(realloc + '/settings2.xml', SETTINGS_LOC + '/settings2.xml')
         realloc = xbmc.translatePath(os.path.join(realloc, 'cache')) + '/'
 
         for i in range(999):
             FileAccess.copy(realloc + 'channel_' + str(i) + '.m3u', CHANNELS_LOC + 'channel_' + str(i) + '.m3u')
-            updatedlg.update(int(i * .07) + 1, "Initializing", "Copying Channels...")
+            if updatedlg:
+                updatedlg.update(int(i * .07) + 1, "Initializing", "Copying Channels...")
 
                 
     def storeFiles(self):
@@ -809,9 +813,7 @@ class TVOverlay(xbmcgui.WindowXMLDialog):
                     raise
             except:
                 pass  
-
-        if DEBUG == 'true':
-            xbmc.executebuiltin("Notification( %s, %s, %d, %s)" % ("PseudoTV Live", "DEBUGGING: setOnNow finished", 1000, THUMB) )
+                
         self.log('setOnNow return')     
 
  
@@ -2148,6 +2150,8 @@ class TVOverlay(xbmcgui.WindowXMLDialog):
         # elif action == ACTION_OSD:
             # xbmc.executebuiltin("ActivateWindow(12901)")
 
+        elif action == ACTION_CONTEXT_MENU:
+            self.log('ACTION_CONTEXT_MENU')
         self.actionSemaphore.release()
         self.OnAction = False
         self.log('onAction return')

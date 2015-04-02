@@ -1,7 +1,7 @@
 <settings>
 <!--General-->
     <category label="30000">
-        <setting label="300001" type="lsep"/>
+        <setting label="30001" type="lsep"/>
             <setting id="Config" type="action" label="30002" action="RunScript($CWD/config.py)"/>
             <setting label="30003" type="lsep"/>
                 <setting id="Auto_Start" type="bool" label="30044" default="false"/>
@@ -12,7 +12,7 @@
                 <setting id="ForceChannelReset" type="bool" label="30005" default="false" />
                 <setting id="ChannelResetSetting" type="enum" label="30006" values="Automatic|Daily|Weekly|Monthly|Never|Every Time" default="0"/>
                 <setting id="StartMode" type="enum" label="30007" values="Resume|Real Time|Random" default="1" />
-                <setting id="ThreadMode" type="enum" label="30008" values="On|Minimum Use|Off" default="1" />
+                <setting id="ThreadMode" type="enum" label="30008" values="On|Minimum Use|Off" default="0" />
                 <setting id="EnableSettop" type="bool" label="30998" default="false"/>
                 <setting id="REFRESH_INT" subsetting="true"  visible="eq(-1,true)" type="enum" label="31000" values="4|8|12|24" default="2"/>
                 <setting id="notify" type="bool" label="30046" default="true"/>
@@ -29,9 +29,9 @@
         <setting id="AutoJump" type="bool" label="30408" default="false" />
         <setting id="HideClips" type="bool" label="30215" default="true"/>
         <setting id="ClipLength" type="enum" subsetting="true" label="30216" visible="eq(-1,true)" values="15|30|60|90|120|240|360|480" default="7"/>
-    	<setting id="MEDIA_LIMIT" label="30310" type="enum" values="25|50|100|250|500|1000|Unlimited" default="0"/>
+    	<setting id="MEDIA_LIMIT" label="30310" type="enum" values="25|50|100|250|500|1000|Unlimited" default="1"/>
         <setting id="reserveChannels" type="bool" label="30372" default="false"/>
-        <setting id="enable_mute" type="bool" label="30373" default="true"/>
+        <setting id="enable_mute" type="bool" label="30373" default="false"/>
         
     </category>
 <!--Visual-->

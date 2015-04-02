@@ -51,7 +51,10 @@ class EPGWindow(xbmcgui.WindowXMLDialog):
         self.actionSemaphore = threading.BoundedSemaphore()
         self.lastActionTime = time.time()
         self.channelLogos = ''
+        self.textcolor = "FFFFFFFF"
+        self.focusedcolor = "FF7d7d7d"
         self.clockMode = 0
+        self.textfont  = "font14"
         self.startup = time.time()
         self.showingInfo = False
         self.infoOffset = 0
@@ -119,17 +122,11 @@ class EPGWindow(xbmcgui.WindowXMLDialog):
             textcolor = int(self.getControl(100).getLabel(), 16)            
             if textcolor > 0:
                 self.textcolor = hex(textcolor)[2:]
-        except:
-            pass
-        
-        try:
+            
             focusedcolor = int(self.getControl(99).getLabel(), 16)
             if focusedcolor > 0:
                 self.focusedcolor = hex(focusedcolor)[2:]
-        except:
-            pass
-        
-        try:
+            
             self.textfont = self.getControl(105).getLabel()
         except:
             pass
@@ -353,6 +350,7 @@ class EPGWindow(xbmcgui.WindowXMLDialog):
     # create the buttons for the specified channel in the given row
     def setButtons(self, starttime, curchannel, row):
         self.logDebug('setButtons ' + str(starttime) + ", " + str(curchannel) + ", " + str(row))
+        Filtered = False
         try:
             curchannel = self.MyOverlayWindow.fixChannel(curchannel)
             basex, basey = self.getControl(111 + row).getPosition()
@@ -534,7 +532,8 @@ class EPGWindow(xbmcgui.WindowXMLDialog):
                             self.textureButtonNoFocus = self.GetEPGtype(rating)
                         else:   
                             self.textureButtonNoFocus = MEDIA_LOC + BUTTON_NO_FOCUS
-                            
+                           
+                        # Filtered = True
                         #Create Control array
                         self.channelButtons[row].append(xbmcgui.ControlButton(xpos, basey, width, baseh, mylabel, focusTexture=self.textureButtonFocus, noFocusTexture=self.textureButtonNoFocus, alignment=4, font=self.textfont, textColor=self.textcolor, focusedColor=self.focusedcolor))
 
@@ -635,6 +634,15 @@ class EPGWindow(xbmcgui.WindowXMLDialog):
             elif action == ACTION_RECORD:
                 self.log('ACTION_RECORD')
                 PVRrecord(self.PVRchtype, self.PVRmediapath, self.PVRchname, self.PVRtitle)
+                    
+            elif action == ACTION_CONTEXT_MENU:
+                self.log('ACTION_CONTEXT_MENU')
+                # self.Conlist = xbmcgui.ControlList(200, 150, 300, 400)
+                # self.addControl(self.Conlist)
+                # self.Conlist.addItem('Item 1')
+                # self.Conlist.addItem('Item 2')
+                # self.Conlist.addItem('Item 3')
+                # self.setFocus(self.Conlist)
 
         except:
             self.log("Unknown EPG Exception", xbmc.LOGERROR)

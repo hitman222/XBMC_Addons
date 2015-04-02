@@ -39,7 +39,12 @@ def log(msg, level = xbmc.LOGDEBUG):
 def uni(string, encoding = 'utf-8'):
     if isinstance(string, basestring):
         if not isinstance(string, unicode):
-            string = unicode(string, encoding, errors='ignore')
+            string = unicode(string, encoding, 'ignore')
+    return string
+    
+    
+def ConStr(string, encoding = 'utf-8'):
+    string = string.encode(encoding, 'ignore')
     return string
 
     
@@ -319,7 +324,7 @@ COLOR_CHANNUM = ['0xFF0297eb', '0xC0C0C0C0', '0xff00ff00', '0xff888888', '0xffcc
 CHANBUG_COLOR = COLOR_CHANNUM[int(REAL_SETTINGS.getSetting('COLOR_CHANNUM'))]
 
 #Actions
-#https://github.com/xbmc/xbmc/blob/master/xbmc/guilib/Key.h
+#https://github.com/xbmc/xbmc/blob/master/xbmc/input/Key.h
 ACTION_MOVE_LEFT = 1
 ACTION_MOVE_RIGHT = 2
 ACTION_MOVE_UP = 3
@@ -330,6 +335,7 @@ ACTION_SELECT_ITEM = 7
 ACTION_PREVIOUS_MENU = (9, 10, 92, 247, 257, 275, 61467, 61448)
 ##KEY_BUTTON_BACK = 275   
 ##ACTION_NAV_BACK = 92
+ACTION_DELETE_ITEM = 80
 ACTION_SHOW_INFO = 11
 ACTION_PAUSE = 12
 ACTION_STOP = 13
@@ -347,6 +353,7 @@ ACTION_NUMBER_9 = 67
 ACTION_INVALID = 999
 ACTION_SHOW_SUBTITLES = 25 #turn subtitles on/off. 
 ACTION_AUDIO_NEXT_LANGUAGE = 56 #Select next language in movie
+ACTION_CONTEXT_MENU = 117
 ACTION_RECORD = 170 #PVR Backend Record
 ACTION_SHOW_CODEC = 27
 ACTION_ASPECT_RATIO = 19 
@@ -365,7 +372,6 @@ ACTION_PLAYER_PLAYPAUSE = 76
 ACTION_TRIGGER_OSD = 243 #show autoclosing OSD. Can b used in videoFullScreen.xml window id=2005
 ACTION_SHOW_MPLAYER_OSD = 83 #toggles mplayers OSD. Can be used in videofullscreen.xml window id=2005
 ACTION_SHOW_OSD_TIME = 123 #displays current time, can be used in videoFullScreen.xml window id=2005
-#ACTION_MENU = 117
 ACTION_MENU = 7
 ACTION_TELETEXT_RED = 215
 ACTION_TELETEXT_GREEN = 216
